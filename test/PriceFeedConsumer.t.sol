@@ -10,15 +10,21 @@ contract PriceFeedConsumerTest is Test {
     uint8 public constant DECIMALS = 18;
     int256 public constant INITIAL_ANSWER = 1 * 10**18;
     PriceFeedConsumer public priceFeedConsumer;
-    MockV3Aggregator public mockV3Aggregator;
 
     function setUp() public {
-        mockV3Aggregator = new MockV3Aggregator(DECIMALS, INITIAL_ANSWER);
-        priceFeedConsumer = new PriceFeedConsumer(address(mockV3Aggregator));
+        MockV3Aggregator mockV3Aggregator = new MockV3Aggregator(DECIMALS, INITIAL_ANSWER);
+        priceFeedConsumer = new PriceFeedConsumer("BTC", address(mockV3Aggregator));
     }
 
-    function testConsumerReturnsStartingValue() public {
-        int256 price = priceFeedConsumer.getLatestPrice();
+    function addPriceFeed(string memory _symbol) public {
+        MockV3Aggregator mockV3AggregatorETH = new MockV3Aggregator(DECIMALS, INITIAL_ANSWER);
+        priceFeedConsumer.addPriceFeed(_symbol, address(mockV3AggregatorETH));
+    }
+
+    function testgetLastestPrice() public {
+        string memory symbol = "ETH";
+        addPriceFeed(symbol);
+        int256 price = priceFeedConsumer.getLatestPrice(symbol);
         assertTrue(price == INITIAL_ANSWER);
     }
 }

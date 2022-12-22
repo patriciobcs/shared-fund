@@ -22,7 +22,7 @@ contract DeployPriceFeedConsumer is Script, HelperConfig {
 
         vm.startBroadcast();
 
-        new PriceFeedConsumer(priceFeed);
+        new PriceFeedConsumer("BTC", priceFeed);
 
         vm.stopBroadcast();
     }
