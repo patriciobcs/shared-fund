@@ -18,7 +18,7 @@ contract PriceFeedConsumer {
      * @notice Adds a new price feed to the contract
      *
      */
-    function addPriceFeed(string memory _symbol, address _priceFeed) priceFeedNotExists(_symbol) public {
+    function addPriceFeed(string memory _symbol, address _priceFeed) priceFeedDoesNotExists(_symbol) public {
         priceFeeds[_symbol] = AggregatorV3Interface(_priceFeed);
     }
 
@@ -61,7 +61,7 @@ contract PriceFeedConsumer {
         _;
     }
 
-    modifier priceFeedNotExists(string memory _symbol) {
+    modifier priceFeedDoesNotExists(string memory _symbol) {
         require(
             priceFeeds[_symbol] == AggregatorV3Interface(address(0)),
             "Price feed already exists."

@@ -57,5 +57,14 @@ contract PortfolioTest is Test {
         portfolio.getAssetValue(symbol);
     }
 
-  
+    function testIncorrectOwner() public {
+        string memory symbol = "ETH";
+        uint256 assetBalance = 100;
+        addAsset(symbol, assetBalance);
+
+        vm.startPrank(address(0x1));
+        vm.expectRevert("Only the owner of the portfolio can call this function.");
+        portfolio.changeAssetBalance("ETH", 100, true);
+        vm.stopPrank();
+    }
 }
