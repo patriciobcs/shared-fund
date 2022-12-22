@@ -16,15 +16,41 @@ contract PriceFeedConsumerTest is Test {
         priceFeedConsumer = new PriceFeedConsumer("BTC", address(mockV3Aggregator));
     }
 
+    // Helpers
+
     function addPriceFeed(string memory _symbol) public {
         MockV3Aggregator mockV3AggregatorETH = new MockV3Aggregator(DECIMALS, INITIAL_ANSWER);
         priceFeedConsumer.addPriceFeed(_symbol, address(mockV3AggregatorETH));
     }
 
-    function testgetLastestPrice() public {
+    // Tests
+
+    function testAddPriceFeeds() public {
+        string[4] memory assets = ["ETH", "SOL", "LINK", "XMR"];
+        for (uint256 i = 0; i < assets.length; i++) {
+           addPriceFeed(assets[i]);
+        }
+    }
+
+    function testGetLastestPrice() public {
         string memory symbol = "ETH";
         addPriceFeed(symbol);
         int256 price = priceFeedConsumer.getLatestPrice(symbol);
         assertTrue(price == INITIAL_ANSWER);
+    }
+
+    function testGetPriceFeed() public {
+        string memory symbol = "ETH";
+        addPriceFeed(symbol);
+        AggregatorV3Interface priceFeed = priceFeedConsumer.getPriceFeed(symbol);
+        assertTrue(address(priceFeed) != address(0));
+    }
+
+    function testRemovePriceFeed() public {
+        string memory symbol = "ETH";
+        addPriceFeed(symbol);
+        priceFeedConsumer.removePriceFeed(symbol);
+        vm.expectRevert("Price feed does not exist.");
+        priceFeedConsumer.getPriceFeed(symbol);
     }
 }
