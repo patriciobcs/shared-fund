@@ -156,14 +156,12 @@ contract PortfolioTest is Test {
 
         addAsset(solSymbol, solBalance, solProportion, false);
         flexibleProportion -= solProportion;
-        assets[ethSymbol].proportion = flexibleProportion * 100 / assets[ethSymbol].proportion;
-        assets[initialSymbol].proportion = flexibleProportion * 100 / assets[initialSymbol].proportion;
+        assets[ethSymbol].proportion = assets[ethSymbol].proportion * flexibleProportion / 100;
+        assets[initialSymbol].proportion = assets[initialSymbol].proportion * flexibleProportion / 100;
 
-        emit log_uint(solBalance);
-
-        // assertEq(portfolio.getAssetProportion(ethSymbol), assets[ethSymbol].proportion);
-        // assertEq(portfolio.getAssetProportion(initialSymbol), assets[initialSymbol].proportion);
-        // assertEq(portfolio.getAssetProportion(solSymbol), solProportion);
+        assertEq(portfolio.getAssetProportion(ethSymbol), assets[ethSymbol].proportion);
+        assertEq(portfolio.getAssetProportion(initialSymbol), assets[initialSymbol].proportion);
+        assertEq(portfolio.getAssetProportion(solSymbol), solProportion);
     }
 
 
