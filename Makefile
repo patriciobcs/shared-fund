@@ -1,11 +1,13 @@
 -include .env
 
-.PHONY: all test clean deploy-anvil
+.PHONY: all test clean deploy-anvil remappings
 
-all: clean remove install build
+all: clean remove install build remappings
 
 # Clean the repo
 clean  :; forge clean
+
+remappings :; forge remappings > remappings.txt
 
 # Remove modules
 remove :; rm -rf .gitmodules && rm -rf .git/modules/* && rm -rf lib && touch .gitmodules && git add . && git commit -m "modules"
