@@ -2,12 +2,13 @@
 pragma solidity ^0.8.7;
 
 import "./PriceFeedConsumer.sol";
+import "openzeppelin-contracts/access/Ownable.sol";
 
 /**
  * @title The Portfolio contract
  * @notice A contract to manage a portfolio of assets
  */
-contract Portfolio {
+contract Portfolio is Ownable {
     struct Asset {
         uint256 balance;
         uint256 proportion;
@@ -15,7 +16,6 @@ contract Portfolio {
     }
     mapping(string => Asset) public assets; // symbols => balance
     string[] public symbols; // symbols
-    address public owner; // owner of the portfolio
     PriceFeedConsumer internal priceFeeds; // price feed consumer (chainlink)
     string public baseSymbol; // symbol use as a base pair in the swaps
     uint256 public flexibleProportion; // total amount of proportion that are static
@@ -33,9 +33,6 @@ contract Portfolio {
     event log_uint(uint256 number);
 
     constructor(string memory _symbol, uint256 _balance, bool _isFlexible, address _priceFeed) {
-        // Set portfolio's owner
-        owner = msg.sender;
-
         // Add first asset to the portfolio
         priceFeeds = new PriceFeedConsumer(_symbol, _priceFeed);
         assets[_symbol].balance = _balance;
@@ -52,7 +49,7 @@ contract Portfolio {
      * @notice Adds a new asset to the portfolio
      *
      */
-    function addAsset(string memory _symbol, uint256 _balance, uint256 _proportion, bool _isFlexible, address _priceFeed) ownerOnly assetDoesNotExist(_symbol) public {
+    function addAsset(string memory _symbol, uint256 _balance, uint256 _proportion, bool _isFlexible, address _priceFeed) onlyOwner assetDoesNotExist(_symbol) public {
         require(_proportion < flexibleProportion, "Not sufficient proportion available.");
         
         uint256 rest = flexibleProportion - _proportion;
@@ -76,7 +73,7 @@ contract Portfolio {
      * @notice Change asset balance to the portfolio
      *
      */
-    function changeAssetBalance(string memory _symbol, uint256 _change, bool _isAddition) ownerOnly assetExists(_symbol) public {
+    function changeAssetBalance(string memory _symbol, uint256 _change, bool _isAddition) onlyOwner assetExists(_symbol) public {
         // if addition is true, add the change to the balance
         if (_isAddition) {
             assets[_symbol].balance += _change;
@@ -103,6 +100,15 @@ contract Portfolio {
             }
             emit AssetRemoved(_symbol);
         }
+    }
+
+    /**
+     * @notice Check if the caller is the owner of the contract
+     *
+     * @return true if the caller is the owner of the contract
+     */
+    function isOwner() internal view returns(bool) {
+        return owner() == msg.sender;
     }
 
     /**
@@ -217,11 +223,6 @@ contract Portfolio {
             uint256 amount = diff / buys[i].price;
             swapAsset(buys[i].symbol, amount, true, buys[i].price);
         }
-    }
-
-    modifier ownerOnly() {
-        require(msg.sender == owner, "Only the owner of the portfolio can call this function.");
-        _;
     }
 
     modifier assetExists(string memory _symbol) {

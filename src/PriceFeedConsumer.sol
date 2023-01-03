@@ -2,12 +2,13 @@
 pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "openzeppelin-contracts/access/Ownable.sol";
 
 /**
  * @title The PriceConsumerV3 contract
  * @notice A contract that returns latest price from Chainlink Price Feeds
  */
-contract PriceFeedConsumer {
+contract PriceFeedConsumer is Ownable {
     mapping(string => AggregatorV3Interface) internal priceFeeds;
 
     constructor(string memory _symbol, address _priceFeed) {
@@ -18,7 +19,7 @@ contract PriceFeedConsumer {
      * @notice Adds a new price feed to the contract
      *
      */
-    function addPriceFeed(string memory _symbol, address _priceFeed) priceFeedDoesNotExists(_symbol) public {
+    function addPriceFeed(string memory _symbol, address _priceFeed) priceFeedDoesNotExists(_symbol) onlyOwner public {
         priceFeeds[_symbol] = AggregatorV3Interface(_priceFeed);
     }
 
@@ -26,7 +27,7 @@ contract PriceFeedConsumer {
      * @notice Removes a price feed from the contract
      *
      */
-    function removePriceFeed(string memory _symbol) priceFeedExists(_symbol) public {
+    function removePriceFeed(string memory _symbol) priceFeedExists(_symbol) onlyOwner public {
         delete priceFeeds[_symbol];
     }
 

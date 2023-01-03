@@ -90,7 +90,7 @@ contract PortfolioTest is Test {
         addAsset(symbol, assetBalance, 25, false);
 
         vm.startPrank(address(0x1));
-        vm.expectRevert("Only the owner of the portfolio can call this function.");
+        vm.expectRevert("Ownable: caller is not the owner");
         portfolio.changeAssetBalance("ETH", 100, true);
         vm.stopPrank();
     }
