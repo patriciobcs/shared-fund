@@ -4,12 +4,17 @@ pragma solidity ^0.8.7;
 import "./PriceFeedConsumer.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
 import "./SharedFund.sol";
+import "./math/WadRayMath.sol";
+import "./math/PercentageMath.sol";
 
 /**
  * @title The Portfolio contract
  * @notice A contract to manage a portfolio of assets
  */
 contract Portfolio is Ownable, SharedFund {
+    using WadRayMath for uint256;
+    using PercentageMath for uint256;
+
     struct Asset {
         uint256 balance;
         uint256 proportion;
@@ -21,6 +26,7 @@ contract Portfolio is Ownable, SharedFund {
     PriceFeedConsumer internal priceFeeds; // price feed consumer (chainlink)
     string public baseSymbol; // symbol use as a base pair in the swaps
     uint256 public flexibleProportion; // total amount of proportion that are static
+    uint256 WAD = WadRayMath.WAD;
 
     struct BuyOrder {
         string symbol;
@@ -47,11 +53,87 @@ contract Portfolio is Ownable, SharedFund {
         }
     }
 
-    function deposit() public payable {
-        // verify that the sender is the owner of a token
-        require(balanceOf(msg.sender) != 0, "SharedFund: deposit from non-owner");
-        uint256 deposited_amount = msg.value;
-        //TODO update share with chainlink oracle depending on amount deposited
+    /**
+     * @notice Deposit funds for a portfolio share. This rebalances the amount of shares each owner has.
+     * @param tokenId The ID of the token to deposit funds for.
+     */
+    function deposit(uint256 tokenId) public payable {
+        require(ownerOf(tokenId) == msg.sender, "You are not the owner of this share");
+        uint256 previousValue = getPortfolioValue();
+
+        // register the deposited ETH in the balances
+        uint256 depositedAmount = msg.value;
+        assets["ETH"].balance += depositedAmount;
+        uint256 newValue = getPortfolioValue();
+
+        // update the shares by 1. rebalancing all shares and 2. overriding the current share with the new value
+        uint256 depositedValue = depositedAmount * uint256(priceFeeds.getLatestPrice("ETH"));
+        uint256 depositedShare;
+        if (previousValue == 0) {
+            depositedShare = PercentageMath.PERCENTAGE_FACTOR;
+            // 100% of the portfolio
+        } else {
+            depositedShare = (depositedValue * PercentageMath.PERCENTAGE_FACTOR) / newValue;
+        }
+        rebalanceShares(previousValue, newValue);
+        shares[tokenId] += depositedShare;
+        // update share of the token
+    }
+
+    /**
+     * @notice Rebalances the amount of shares each owner has on a deposit/withdraw event.
+     * @param oldValue Old total portfolio value.
+     * @param newValue New total portfolio value.
+     */
+    function rebalanceShares(uint256 oldValue, uint256 newValue) internal {
+        // early return if the portfolio was not initialized before as no rebalancing is required.
+        // or if the new value is null (if everything was withdrawn).
+        if (oldValue == 0 || newValue == 0) {
+            return;
+        }
+        for (uint256 i = 1; i <= totalSupply(); i++) {
+            uint256 tokenId = i;
+            uint256 share = shares[tokenId];
+            uint256 newShare = oldValue * share / (newValue);
+            shares[tokenId] = newShare;
+        }
+    }
+
+    /**
+     * @notice Withdraw funds from a portfolio share. This rebalances the amount of shares each owner has.
+     * @param tokenId The ID of the token to withdraw funds from.
+     * @param amount The percentage of your share to withdraw, expressed in PERCENTAGE_FACTOr. - e.g. for 50%, amount = 0.5*PERCENTAGE_FACTOR(50.00%)
+     *
+     */
+    function withdraw(uint256 tokenId, uint256 amount) public {
+        require(ownerOf(tokenId) == msg.sender, "You are not the owner of this share");
+        uint256 share = shares[tokenId];
+        // TODO once we have swaps enabled, the withdrawn value should be calculated after slippage.
+
+        // USD Values
+        uint256 totalValue = getPortfolioValue();
+        uint256 shareValue = totalValue.percentMul(share);
+        uint256 withdrawnValue = totalValue.percentMul(share).percentMul(amount);
+        uint256 newShareValue = shareValue - withdrawnValue;
+        uint256 newTotalValue = totalValue - withdrawnValue;
+
+        // rebalance other user shares based on the new total value
+        rebalanceShares(totalValue, newTotalValue);
+
+        // rebalance owner share based on withdrawn value
+        uint256 newShareRebalanced;
+        if (amount == PercentageMath.PERCENTAGE_FACTOR) {
+            newShareRebalanced = 0;
+        } else {
+            newShareRebalanced = (newShareValue * PercentageMath.PERCENTAGE_FACTOR) / (newTotalValue);
+        }
+        shares[tokenId] = newShareRebalanced;
+
+        // Convert USD values to ETH amount for withdrawal
+        uint256 etherToWithdraw = withdrawnValue / uint256(priceFeeds.getLatestPrice("ETH"));
+        emit log_uint(etherToWithdraw);
+        assets["ETH"].balance -= etherToWithdraw;
+        payable(msg.sender).transfer(etherToWithdraw);
     }
 
     /**
@@ -87,9 +169,9 @@ contract Portfolio is Ownable, SharedFund {
      * @notice Change asset balance to the portfolio
      */
     function changeAssetBalance(string memory _symbol, uint256 _change, bool _isAddition)
-    public
-    onlyOwner
-    assetExists(_symbol)
+        public
+        onlyOwner
+        assetExists(_symbol)
     {
         // if addition is true, add the change to the balance
         if (_isAddition) {
@@ -149,11 +231,11 @@ contract Portfolio is Ownable, SharedFund {
         return uint256(priceFeeds.getLatestPrice(_symbol)) * assets[_symbol].balance;
     }
 
-
     /**
      * @notice Returns the asset proportion
      * @return asset balance
-     **/
+     *
+     */
     function getAssetProportion(string memory _symbol) public view assetExists(_symbol) returns (uint256) {
         return assets[_symbol].proportion;
     }
@@ -199,8 +281,10 @@ contract Portfolio is Ownable, SharedFund {
             // How close the value can be to the required value is defined by the delta variable
             if (
                 currentValue == requiredValue
-                || (currentValue < requiredValue + delta && currentValue > requiredValue - delta)
-            ) continue;
+                    || (currentValue < requiredValue + delta && currentValue > requiredValue - delta)
+            ) {
+                continue;
+            }
 
             uint256 amount = 0;
             bool isSell = true;

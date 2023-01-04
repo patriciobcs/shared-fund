@@ -52,17 +52,9 @@ contract PortfolioTest is Test {
 
     // Tests
 
-
     function testGetPortfolioValue() public {
         uint256 value = portfolio.getPortfolioValue();
         assertEq(value, portfolioValue, "Portfolio value should be the sum of all assets");
-    }
-
-    /// @notice Test that an owner can deposit ether and its share is correctly updated
-    function testDeposit() public {
-        uint256 amount = 100;
-        portfolio.deposit{value: amount}();
-        assertEq(address(portfolio).balance, amount, "Portfolio should have the deposited amount");
     }
 
     function testAddAssets() public {

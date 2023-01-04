@@ -1,17 +1,19 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.13;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.7;
 
-import "openzeppelin-contracts/contracts/utils/Counters.sol";
-import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import "openzeppelin-contracts/utils/Counters.sol";
+import "openzeppelin-contracts/token/ERC721/ERC721.sol";
 
 contract SharedFund is ERC721 {
     using Counters for Counters.Counter;
 
-    Counters.Counter private _tokenIds;
+    Counters.Counter private tokenIds;
 
     // Mapping from token ID to share owned.
-    // expressed in bps (basis points). 100% = 10000 bps
-    mapping(uint256 => uint256) private _shares;
+    // expressed in wad which are decimal number with 18 decimals of precision
+    // 1 wad = 1e18 = 1%
+    // 100 wad = 1e20 = 100%
+    mapping(uint256 => uint256) public shares;
 
     constructor() ERC721("SharedFund", "SHAFU") {}
 
@@ -28,11 +30,23 @@ contract SharedFund is ERC721 {
     /// @param recipient The address that will own the minted token
     /// @return tokenId The token id of the minted token
     function _mint(address recipient) internal returns (uint256) {
-        _tokenIds.increment();
-
-        uint256 newItemId = _tokenIds.current();
+        tokenIds.increment();
+        uint256 newItemId = tokenIds.current();
         _safeMint(recipient, newItemId);
-        _shares[newItemId] = 0;
+        shares[newItemId] = 0;
         return newItemId;
+    }
+
+    /**
+     * @notice Returns the share owned by `owner`.
+     * @dev See {IERC721-balanceOf}.
+     *
+     */
+    function shareOf(uint256 tokenId) public view returns (uint256) {
+        return shares[tokenId];
+    }
+
+    function totalSupply() public view returns (uint256) {
+        return tokenIds.current();
     }
 }
