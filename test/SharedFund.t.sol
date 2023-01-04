@@ -4,8 +4,9 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "src/SharedFund.sol";
 
-contract SharedFundTest is Test{
+contract SharedFundTest is Test {
     SharedFund sharedFund;
+
     function setUp() public {
         sharedFund = new SharedFund();
     }
