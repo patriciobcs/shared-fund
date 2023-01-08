@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 import "./PriceFeedConsumer.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
 import "./SharedFund.sol";
-import "./math/WadRayMath.sol";
+import "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/PercentageMath.sol";
 
 /**

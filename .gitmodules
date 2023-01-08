@@ -10,9 +10,6 @@
 	path = lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
 	branch = v4.8.0
-[submodule "lib/aave-protocol"]
-	path = lib/aave-protocol
-	url = https://github.com/aave/aave-protocol
 [submodule "lib/aave-v3-core"]
 	path = lib/aave-v3-core
 	url = https://github.com/aave/aave-v3-core
