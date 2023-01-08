@@ -5,7 +5,7 @@ import "./PriceFeedConsumer.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
 import "./SharedFund.sol";
 import "./math/WadRayMath.sol";
-import "./math/PercentageMath.sol";
+import "aave-v3-core/contracts/protocol/libraries/math/PercentageMath.sol";
 
 /**
  * @title The Portfolio contract

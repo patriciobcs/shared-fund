@@ -13,3 +13,7 @@
 [submodule "lib/aave-protocol"]
 	path = lib/aave-protocol
 	url = https://github.com/aave/aave-protocol
+[submodule "lib/aave-v3-core"]
+	path = lib/aave-v3-core
+	url = https://github.com/aave/aave-v3-core
+	branch = v1.17.0
