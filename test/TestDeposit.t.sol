@@ -1,17 +1,9 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
 
 import "./setup/TestSetup.sol";
 
 contract TestDeposit is TestSetup {
-    function deposit(address user, uint256 tokenId, uint256 amount) public {
-        vm.startPrank(user);
-        vm.deal(user, amount);
-        portfolio.deposit{value: amount}(tokenId);
-        vm.stopPrank();
-    }
-
     function testDepositOneUser() public {
         deposit(user1, 1, 1 ether);
         uint256 share = portfolio.shareOf(1);

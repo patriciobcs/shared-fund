@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
 import "../../src/Portfolio.sol";
 import "../mocks/MockV3Aggregator.sol";
 import "forge-std/Test.sol";
@@ -41,5 +44,12 @@ contract TestSetup is Test {
         portfolio.invite(user1);
         portfolio.invite(user2);
         portfolio.invite(user3);
+    }
+
+    function deposit(address user, uint256 tokenId, uint256 amount) public {
+        vm.startPrank(user);
+        vm.deal(user, amount);
+        portfolio.deposit{value: amount}(tokenId);
+        vm.stopPrank();
     }
 }

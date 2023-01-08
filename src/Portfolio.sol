@@ -27,6 +27,7 @@ contract Portfolio is Ownable, SharedFund {
     string public baseSymbol; // symbol use as a base pair in the swaps
     uint256 public flexibleProportion; // total amount of proportion that are static
     uint256 WAD = WadRayMath.WAD;
+    string portfolioCurrency = "ETH";
 
     struct BuyOrder {
         string symbol;
@@ -38,7 +39,6 @@ contract Portfolio is Ownable, SharedFund {
     event Sell(string symbol, uint256 amount, uint256 price, uint256 change);
     event AssetState(string symbol, uint256 balance, uint256 value, uint256 required_value, uint256 proportion);
     event AssetRemoved(string symbol);
-    event log_uint(uint256 number);
 
     constructor(string memory _symbol, uint256 _balance, bool _isFlexible, address _priceFeed) {
         // Add first asset to the portfolio
@@ -63,11 +63,11 @@ contract Portfolio is Ownable, SharedFund {
 
         // register the deposited ETH in the balances
         uint256 depositedAmount = msg.value;
-        assets["ETH"].balance += depositedAmount;
+        assets[portfolioCurrency].balance += depositedAmount;
         uint256 newValue = getPortfolioValue();
 
         // update the shares by 1. rebalancing all shares and 2. overriding the current share with the new value
-        uint256 depositedValue = depositedAmount * uint256(priceFeeds.getLatestPrice("ETH"));
+        uint256 depositedValue = depositedAmount * uint256(priceFeeds.getLatestPrice(portfolioCurrency));
         uint256 depositedShare;
         if (previousValue == 0) {
             depositedShare = PercentageMath.PERCENTAGE_FACTOR;
@@ -107,6 +107,7 @@ contract Portfolio is Ownable, SharedFund {
      */
     function withdraw(uint256 tokenId, uint256 amount) public {
         require(ownerOf(tokenId) == msg.sender, "You are not the owner of this share");
+        require(amount <= PercentageMath.PERCENTAGE_FACTOR, "Amount must range between 0 and 1e4");
         uint256 share = shares[tokenId];
         // TODO once we have swaps enabled, the withdrawn value should be calculated after slippage.
 
@@ -114,6 +115,7 @@ contract Portfolio is Ownable, SharedFund {
         uint256 totalValue = getPortfolioValue();
         uint256 shareValue = totalValue.percentMul(share);
         uint256 withdrawnValue = totalValue.percentMul(share).percentMul(amount);
+        require(withdrawnValue <= totalValue, "Withdrawn value must not be greater than total value");
         uint256 newShareValue = shareValue - withdrawnValue;
         uint256 newTotalValue = totalValue - withdrawnValue;
 
@@ -130,9 +132,8 @@ contract Portfolio is Ownable, SharedFund {
         shares[tokenId] = newShareRebalanced;
 
         // Convert USD values to ETH amount for withdrawal
-        uint256 etherToWithdraw = withdrawnValue / uint256(priceFeeds.getLatestPrice("ETH"));
-        emit log_uint(etherToWithdraw);
-        assets["ETH"].balance -= etherToWithdraw;
+        uint256 etherToWithdraw = withdrawnValue / uint256(priceFeeds.getLatestPrice(portfolioCurrency));
+        assets[portfolioCurrency].balance -= etherToWithdraw;
         payable(msg.sender).transfer(etherToWithdraw);
     }
 
