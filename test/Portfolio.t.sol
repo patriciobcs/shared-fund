@@ -4,25 +4,13 @@ pragma solidity ^0.8.0;
 import "../src/Portfolio.sol";
 import "./mocks/MockV3Aggregator.sol";
 import "forge-std/Test.sol";
+import "./setup/TestSetup.sol";
 
-contract PortfolioTest is Test {
-    struct Asset {
-        uint8 decimals;
-        uint256 price;
-        uint256 balance;
-        uint256 proportion;
-        bool isFlexible;
-        MockV3Aggregator aggregator;
-    }
-
-    mapping(string => Asset) public assets;
-    string[] public symbols;
-    uint256 portfolioValue;
-    Portfolio public portfolio;
+contract PortfolioTest is TestSetup {
     string initialSymbol = "BTC";
     uint256 initialBalance = 100;
 
-    function setUp() public {
+    function setUp() public override {
         setAsset("BTC", 6, 20_000);
         setAsset("ETH", 9, 2_000);
         setAsset("SOL", 9, 200);
@@ -32,14 +20,6 @@ contract PortfolioTest is Test {
         assets[initialSymbol].balance = initialBalance;
         assets[initialSymbol].proportion = 100;
         portfolioValue = initialBalance * assets[initialSymbol].price;
-    }
-
-    // Helpers
-
-    function setAsset(string memory _symbol, uint8 _decimals, uint256 _price) public {
-        MockV3Aggregator mockV3AggregatorETH = new MockV3Aggregator(_decimals, int(_price));
-        assets[_symbol] = Asset(_decimals, _price, 0, 0, true, mockV3AggregatorETH);
-        symbols.push(_symbol);
     }
 
     function addAsset(string memory _symbol, uint256 _balance, uint256 _proportion, bool _isFlexible) public {
