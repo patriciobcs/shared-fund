@@ -19,7 +19,7 @@ contract PriceFeedConsumer is Ownable {
      * @notice Adds a new price feed to the contract
      *
      */
-    function addPriceFeed(string memory _symbol, address _priceFeed) priceFeedDoesNotExists(_symbol) onlyOwner public {
+    function addPriceFeed(string memory _symbol, address _priceFeed) public priceFeedDoesNotExists(_symbol) onlyOwner {
         priceFeeds[_symbol] = AggregatorV3Interface(_priceFeed);
     }
 
@@ -27,7 +27,7 @@ contract PriceFeedConsumer is Ownable {
      * @notice Removes a price feed from the contract
      *
      */
-    function removePriceFeed(string memory _symbol) priceFeedExists(_symbol) onlyOwner public {
+    function removePriceFeed(string memory _symbol) public priceFeedExists(_symbol) onlyOwner {
         delete priceFeeds[_symbol];
     }
 
@@ -36,12 +36,8 @@ contract PriceFeedConsumer is Ownable {
      *
      * @return latest price
      */
-    function getLatestPrice(string memory _symbol) priceFeedExists(_symbol)
-        public
-        view
-        returns (int256)
-    {
-        (, int256 price, , , ) = priceFeeds[_symbol].latestRoundData();
+    function getLatestPrice(string memory _symbol) public view priceFeedExists(_symbol) returns (int256) {
+        (, int256 price,,,) = priceFeeds[_symbol].latestRoundData();
         return price;
     }
 
@@ -50,23 +46,17 @@ contract PriceFeedConsumer is Ownable {
      *
      * @return Price Feed address
      */
-    function getPriceFeed(string memory _symbol) priceFeedExists(_symbol) public view returns (AggregatorV3Interface) {
+    function getPriceFeed(string memory _symbol) public view priceFeedExists(_symbol) returns (AggregatorV3Interface) {
         return priceFeeds[_symbol];
     }
 
     modifier priceFeedExists(string memory _symbol) {
-        require(
-            priceFeeds[_symbol] != AggregatorV3Interface(address(0)),
-            "Price feed does not exist."
-        );
+        require(priceFeeds[_symbol] != AggregatorV3Interface(address(0)), "Price feed does not exist.");
         _;
     }
 
     modifier priceFeedDoesNotExists(string memory _symbol) {
-        require(
-            priceFeeds[_symbol] == AggregatorV3Interface(address(0)),
-            "Price feed already exists."
-        );
+        require(priceFeeds[_symbol] == AggregatorV3Interface(address(0)), "Price feed already exists.");
         _;
     }
 }

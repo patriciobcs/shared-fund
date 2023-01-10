@@ -1,28 +1,16 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
 
 import "../src/Portfolio.sol";
 import "./mocks/MockV3Aggregator.sol";
 import "forge-std/Test.sol";
+import "./setup/TestSetup.sol";
 
-contract PortfolioTest is Test {
-    struct Asset {
-        uint8 decimals;
-        uint256 price;
-        uint256 balance;
-        uint256 proportion;
-        bool isFlexible;
-        MockV3Aggregator aggregator;
-    }
-    mapping(string => Asset) public assets;
-    string[] public symbols;
-    uint256 portfolioValue;
-    Portfolio public portfolio;
+contract PortfolioTest is TestSetup {
     string initialSymbol = "BTC";
     uint256 initialBalance = 100;
 
-    function setUp() public {
+    function setUp() public override {
         setAsset("BTC", 6, 20_000);
         setAsset("ETH", 9, 2_000);
         setAsset("SOL", 9, 200);
@@ -34,14 +22,6 @@ contract PortfolioTest is Test {
         portfolioValue = initialBalance * assets[initialSymbol].price;
     }
 
-    // Helpers
-
-    function setAsset(string memory _symbol, uint8 _decimals, uint256 _price) public {
-        MockV3Aggregator mockV3AggregatorETH = new MockV3Aggregator(_decimals, int(_price));
-        assets[_symbol] = Asset(_decimals, _price, 0, 0, true, mockV3AggregatorETH);
-        symbols.push(_symbol);
-    }
-
     function addAsset(string memory _symbol, uint256 _balance, uint256 _proportion, bool _isFlexible) public {
         portfolio.addAsset(_symbol, _balance, _proportion, _isFlexible, address(assets[_symbol].aggregator));
         assets[_symbol].balance = _balance;
@@ -51,10 +31,15 @@ contract PortfolioTest is Test {
 
     // Tests
 
+    function testGetPortfolioValue() public {
+        uint256 value = portfolio.getPortfolioValue();
+        assertEq(value, portfolioValue, "Portfolio value should be the sum of all assets");
+    }
+
     function testAddAssets() public {
         for (uint256 i = 1; i < symbols.length; i++) {
-           addAsset(symbols[i], (i + 1) * initialBalance, 25, false);
-           portfolioValue += (i + 1) * initialBalance * assets[symbols[i]].price;
+            addAsset(symbols[i], (i + 1) * initialBalance, 25, false);
+            portfolioValue += (i + 1) * initialBalance * assets[symbols[i]].price;
         }
         assertEq(portfolio.getPortfolioValue(), portfolioValue);
     }
@@ -172,17 +157,17 @@ contract PortfolioTest is Test {
         addAsset("ETH", 1_000, 25, false);
         addAsset("SOL", 10_000, 25, false);
         addAsset("XMR", 10_000, 25, false);
-        portfolioValue = 6_200_000; 
+        portfolioValue = 6_200_000;
         // New State - [ BTC = 25%, ETH = 25%, SOL = 25%, XMR = 25% ]
         // Before Rebalance
-        // | Sym | Balance * Price = Value  | Proportion                        | 
+        // | Sym | Balance * Price = Value  | Proportion                        |
         // | BTC | 20_000 * 100 = 2_000_000 | 2_000_000 / 6_200_000 = 0.32 = 32 |
         // | ETH | 2_000 * 1000 = 2_000_000 | 2_000_000 / 6_200_000 = 0.32 = 32 |
         // | SOL | 200 * 10000 = 2_000_000  | 2_000_000 / 6_200_000 = 0.32 = 32 |
         // | XMR | 20 * 10000 = 200_000     | 200_000   / 6_200_000 = 0.03 = 3  |
         // | PV  | 2_000_000 + 2_000_000 + 2_000_000 + 200_000 = 6_200_000      |
         assertEq(portfolio.getPortfolioValue(), portfolioValue);
-        
+
         portfolio.rebalance(1);
         // After Rebalance
         // | Sym | Previous Value | New Value | Swap   | Change      | New Proportion | Operation |
@@ -190,7 +175,7 @@ contract PortfolioTest is Test {
         // | ETH | 2_000_000      | 1_550_000 | -225   | -450_000    | 0.25 = 25      | Sell      |
         // | SOL | 2_000_000      | 1_550_000 | -2250  | -450_000    | 0.25 = 25      | Sell      |
         // | XMR | 200_000        | 1_550_000 | 67500  | 1_350_000   | 0.25 = 25      | Buy       |
-        // | PV  | 
+        // | PV  |
 
         assertEq(portfolio.getPortfolioValue(), portfolioValue);
     }

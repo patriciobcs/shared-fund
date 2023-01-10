@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
 
 import "../src/PriceFeedConsumer.sol";
@@ -8,7 +7,7 @@ import "forge-std/Test.sol";
 
 contract PriceFeedConsumerTest is Test {
     uint8 public constant DECIMALS = 18;
-    int256 public constant INITIAL_ANSWER = 1 * 10**18;
+    int256 public constant INITIAL_ANSWER = 1 * 10 ** 18;
     PriceFeedConsumer public priceFeedConsumer;
 
     function setUp() public {
@@ -28,7 +27,7 @@ contract PriceFeedConsumerTest is Test {
     function testAddPriceFeeds() public {
         string[4] memory assets = ["ETH", "SOL", "LINK", "XMR"];
         for (uint256 i = 0; i < assets.length; i++) {
-           addPriceFeed(assets[i]);
+            addPriceFeed(assets[i]);
         }
     }
 
