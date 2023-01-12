@@ -4,6 +4,8 @@ pragma solidity ^0.8.7;
 import "./PriceFeedConsumer.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
 import "./SharedFund.sol";
+import "./SwapToken.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/PercentageMath.sol";
 
@@ -24,10 +26,12 @@ contract Portfolio is Ownable, SharedFund {
     mapping(string => Asset) public assets; // symbols => balance
     string[] public symbols; // symbols
     PriceFeedConsumer internal priceFeeds; // price feed consumer (chainlink)
+    SwapToken internal swap; // swap tokens through uniswap
     string public baseSymbol; // symbol use as a base pair in the swaps
     uint256 public flexibleProportion; // total amount of proportion that are static
     uint256 WAD = WadRayMath.WAD;
     string portfolioCurrency = "ETH";
+
 
     struct BuyOrder {
         string symbol;
@@ -47,6 +51,8 @@ contract Portfolio is Ownable, SharedFund {
         assets[_symbol].proportion = 100;
         assets[_symbol].isFlexible = _isFlexible;
         symbols.push(_symbol);
+
+        swap = new SwapToken(new ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564));
 
         if (_isFlexible) {
             flexibleProportion = 100;
@@ -246,13 +252,14 @@ contract Portfolio is Ownable, SharedFund {
      *
      */
     function swapAsset(string memory _symbol, uint256 _amount, bool _isBuy, uint256 _price) private {
-        // TODO: Buy or sell the balance of the asset
         // If buy is true, then
         changeAssetBalance(_symbol, _amount, _isBuy);
 
         if (_isBuy) {
+            assets[_symbol].balance += swap.swapTokens("ETH",_symbol,_amount,_price);
             emit Buy(_symbol, _amount, _price, _amount * _price);
         } else {
+            assets[portfolioCurrency].balance += swap.swapTokens(_symbol,"ETH",_amount,_price);
             emit Sell(_symbol, _amount, _price, _amount * _price);
         }
     }
