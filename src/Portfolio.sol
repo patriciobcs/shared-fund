@@ -4,6 +4,8 @@ pragma solidity ^0.8.7;
 import "./PriceFeedConsumer.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
 import "./SharedFund.sol";
+import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/PercentageMath.sol";
 
@@ -29,6 +31,12 @@ contract Portfolio is Ownable, SharedFund {
     uint256 WAD = WadRayMath.WAD;
     string portfolioCurrency = "ETH";
 
+    ISwapRouter public immutable swapRouter;
+    uint24 public constant poolFee = 3000;
+    mapping(string => address) public symbolAddress;
+
+
+
     struct BuyOrder {
         string symbol;
         uint256 amount;
@@ -40,7 +48,7 @@ contract Portfolio is Ownable, SharedFund {
     event AssetState(string symbol, uint256 balance, uint256 value, uint256 required_value, uint256 proportion);
     event AssetRemoved(string symbol);
 
-    constructor(string memory _symbol, uint256 _balance, bool _isFlexible, address _priceFeed) {
+    constructor(string memory _symbol, uint256 _balance, bool _isFlexible, address _priceFeed, address _swapRouter) {
         // Add first asset to the portfolio
         priceFeeds = new PriceFeedConsumer(_symbol, _priceFeed);
         assets[_symbol].balance = _balance;
@@ -51,6 +59,14 @@ contract Portfolio is Ownable, SharedFund {
         if (_isFlexible) {
             flexibleProportion = 100;
         }
+
+        /// Uniswap part
+        swap = new ISwapRouter(_swapRouter);
+        //Next i think we can add it through the front
+        symbolAddress["USDC"] = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        symbolAddress["ETH"] = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+        symbolAddress["BTC"] = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
+        symbolAddress["LINK"] = 0x514910771AF9Ca656af840dff83E8264EcF986CA;
     }
 
     /**
@@ -246,13 +262,14 @@ contract Portfolio is Ownable, SharedFund {
      *
      */
     function swapAsset(string memory _symbol, uint256 _amount, bool _isBuy, uint256 _price) private {
-        // TODO: Buy or sell the balance of the asset
         // If buy is true, then
         changeAssetBalance(_symbol, _amount, _isBuy);
 
         if (_isBuy) {
+            assets[_symbol].balance += swap.swapTokens("ETH",_symbol,_amount,_price);
             emit Buy(_symbol, _amount, _price, _amount * _price);
         } else {
+            assets[portfolioCurrency].balance += swap.swapTokens(_symbol,"ETH",_amount,_price);
             emit Sell(_symbol, _amount, _price, _amount * _price);
         }
     }
@@ -334,5 +351,29 @@ contract Portfolio is Ownable, SharedFund {
     modifier assetDoesNotExist(string memory _symbol) {
         require(assets[_symbol].balance == 0, "Asset already exists in the portfolio.");
         _;
+    }
+
+    /**
+     * @notice Swap Token through Uniswap
+     */
+    function swapTokens(address from, address to, uint256 amountIn, uint256 minOut) external returns (uint256 amountOut){
+
+        TransferHelper.safeTransferFrom(symbolAddress[from], msg.sender, address(this), amountIn);
+        TransferHelper.safeApprove(symbolAddress[from], address(swapRouter), amountIn);
+
+        ISwapRouter.ExactInputSingleParams memory params =
+        ISwapRouter.ExactInputSingleParams(
+        {
+            tokenIn: symbolAddress[from],
+            tokenOut: symbolAddress[to],
+            fee: poolFee,
+            recipient: mg.sender,
+            deadline: block.timestamp,
+            amountIn: amountIn,
+            amoutOutMinimum: minOut,
+            sqrtPriceLimitX96: 0
+        });
+
+        amountOut = swapRouter.exactInputSingle(params);
     }
 }
