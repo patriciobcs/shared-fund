@@ -4,8 +4,8 @@ pragma solidity ^0.8.7;
 import "./PriceFeedConsumer.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
 import "./SharedFund.sol";
-import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "uniswap-v3-periphery/libraries/TransferHelper.sol";
+import "uniswap-v3-periphery/interfaces/ISwapRouter.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/PercentageMath.sol";
 
@@ -34,8 +34,6 @@ contract Portfolio is Ownable, SharedFund {
     ISwapRouter public immutable swapRouter;
     uint24 public constant poolFee = 3000;
     mapping(string => address) public symbolAddress;
-
-
 
     struct BuyOrder {
         string symbol;
@@ -266,10 +264,10 @@ contract Portfolio is Ownable, SharedFund {
         changeAssetBalance(_symbol, _amount, _isBuy);
 
         if (_isBuy) {
-            assets[_symbol].balance += swap.swapTokens("ETH",_symbol,_amount,_price);
+            assets[_symbol].balance += swap.swapTokens("ETH", _symbol, _amount, _price);
             emit Buy(_symbol, _amount, _price, _amount * _price);
         } else {
-            assets[portfolioCurrency].balance += swap.swapTokens(_symbol,"ETH",_amount,_price);
+            assets[portfolioCurrency].balance += swap.swapTokens(_symbol, "ETH", _amount, _price);
             emit Sell(_symbol, _amount, _price, _amount * _price);
         }
     }
@@ -356,14 +354,14 @@ contract Portfolio is Ownable, SharedFund {
     /**
      * @notice Swap Token through Uniswap
      */
-    function swapTokens(address from, address to, uint256 amountIn, uint256 minOut) external returns (uint256 amountOut){
-
+    function swapTokens(address from, address to, uint256 amountIn, uint256 minOut)
+        external
+        returns (uint256 amountOut)
+    {
         TransferHelper.safeTransferFrom(symbolAddress[from], msg.sender, address(this), amountIn);
         TransferHelper.safeApprove(symbolAddress[from], address(swapRouter), amountIn);
 
-        ISwapRouter.ExactInputSingleParams memory params =
-        ISwapRouter.ExactInputSingleParams(
-        {
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
             tokenIn: symbolAddress[from],
             tokenOut: symbolAddress[to],
             fee: poolFee,
