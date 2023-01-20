@@ -1,0 +1,32 @@
+.home{
+  background-color:#1c1c1c;
+  height: 900px;
+  h1, h2,h3{
+    color: white;
+  }
+
+  h3{
+    font-size:2rem;
+  }
+
+  &__title{
+    margin-top:15px;
+    margin-left:15px;
+    h1{
+      font-size:4.5rem;
+    }
+
+    h2{
+      font-size:2.5rem;
+      font-weight: 200;
+    }
+  }
+  &__example{
+    margin-left: auto;
+    margin-right:auto;
+    margin-top:25px;
+    width:375px;
+    height:375px;
+    text-align:center;
+  }
+}
