@@ -8,6 +8,7 @@ import "uniswap-v3-periphery/libraries/TransferHelper.sol";
 import "uniswap-v3-periphery/interfaces/ISwapRouter.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/PercentageMath.sol";
+import "./interfaces/external/IWETH.sol";
 
 /**
  * @title The Portfolio contract
@@ -23,13 +24,21 @@ contract Portfolio is Ownable, SharedFund {
         bool isFlexible;
     }
 
+    /// @dev Wrapped Ether contract/address. Since DEXs don't support native chain tokens
+    /// we need to wrap it to ERC20.
+    IWETH public immutable weth;
+
+    /// @dev the base currency of our portfolio. It's the currency we use to buy assets.
+    /// and the one we get when we sell assets.
+    string portfolioCurrency = "WETH";
+
+    /// @dev Maps an ERC20 token address to the
     mapping(string => Asset) public assets; // symbols => balance
     string[] public symbols; // symbols
     PriceFeedConsumer internal priceFeeds; // price feed consumer (chainlink)
     string public baseSymbol; // symbol use as a base pair in the swaps
     uint256 public flexibleProportion; // total amount of proportion that are static
     uint256 WAD = WadRayMath.WAD;
-    string portfolioCurrency = "ETH";
 
     ISwapRouter public immutable swapRouter;
     uint24 public constant poolFee = 3000;
@@ -46,7 +55,16 @@ contract Portfolio is Ownable, SharedFund {
     event AssetState(string symbol, uint256 balance, uint256 value, uint256 required_value, uint256 proportion);
     event AssetRemoved(string symbol);
 
-    constructor(string memory _symbol, uint256 _balance, bool _isFlexible, address _priceFeed, address _swapRouter) {
+    constructor(
+        address _weth,
+        uint256 _balance,
+        bool _isFlexible,
+        address _priceFeed,
+        address _swapRouter,
+        address _WETH
+    ) {
+        weth = IWETH(_weth);
+
         // Add first asset to the portfolio
         priceFeeds = new PriceFeedConsumer(_symbol, _priceFeed);
         assets[_symbol].balance = _balance;
@@ -68,15 +86,20 @@ contract Portfolio is Ownable, SharedFund {
     }
 
     /**
-     * @notice Deposit funds for a portfolio share. This rebalances the amount of shares each owner has.
+     * @notice Receive function called by users that will deposit funds for a portfolio share.
+     * This rebalances the amount of shares each owner has.
+     * @dev This function is payable and will receive ETH from the user. The function will wrap the ether sent by the user into WETH.
      * @param tokenId The ID of the token to deposit funds for.
      */
-    function deposit(uint256 tokenId) public payable {
+    receive(uint256 tokenId) external payable {
         require(ownerOf(tokenId) == msg.sender, "You are not the owner of this share");
         uint256 previousValue = getPortfolioValue();
 
         // register the deposited ETH in the balances
         uint256 depositedAmount = msg.value;
+        // Since UNIv3 is in WETH, we need to convert ETH to WETH
+        weth.deposit.value(msg.value)();
+
         assets[portfolioCurrency].balance += depositedAmount;
         uint256 newValue = getPortfolioValue();
 
@@ -115,6 +138,7 @@ contract Portfolio is Ownable, SharedFund {
 
     /**
      * @notice Withdraw funds from a portfolio share. This rebalances the amount of shares each owner has.
+     * @dev the WETH balance of the contract will be unwrapped to ETH and sent to the user.
      * @param tokenId The ID of the token to withdraw funds from.
      * @param amount The percentage of your share to withdraw, expressed in PERCENTAGE_FACTOr. - e.g. for 50%, amount = 0.5*PERCENTAGE_FACTOR(50.00%)
      *
@@ -148,6 +172,8 @@ contract Portfolio is Ownable, SharedFund {
         // Convert USD values to ETH amount for withdrawal
         uint256 etherToWithdraw = withdrawnValue / uint256(priceFeeds.getLatestPrice(portfolioCurrency));
         assets[portfolioCurrency].balance -= etherToWithdraw;
+
+        weth.withdraw(etherToWithdraw);
         payable(msg.sender).transfer(etherToWithdraw);
     }
 
@@ -264,10 +290,10 @@ contract Portfolio is Ownable, SharedFund {
         changeAssetBalance(_symbol, _amount, _isBuy);
 
         if (_isBuy) {
-            assets[_symbol].balance += swap.swapTokens("ETH", _symbol, _amount, _price);
+            assets[_symbol].balance += swap.swapTokens(portfolioCurrency, _symbol, _amount, _price);
             emit Buy(_symbol, _amount, _price, _amount * _price);
         } else {
-            assets[portfolioCurrency].balance += swap.swapTokens(_symbol, "ETH", _amount, _price);
+            assets[portfolioCurrency].balance += swap.swapTokens(_symbol, portfolioCurrency, _amount, _price);
             emit Sell(_symbol, _amount, _price, _amount * _price);
         }
     }
