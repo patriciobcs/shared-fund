@@ -60,6 +60,7 @@ contract Portfolio is Ownable, SharedFund {
     event Sell(address token, uint256 amount, uint256 minOut);
     event AssetState(address token, uint256 balance, uint256 value, uint256 required_value, uint256 proportion);
     event AssetRemoved(address token);
+    event log_uint(uint256 value);
 
     /* ---------------------------- CONSTRUCTOR ---------------------------- */
 
@@ -283,6 +284,15 @@ contract Portfolio is Ownable, SharedFund {
     ///      2. Buy the assets that are below the target proportion.
     /// @param buysLength The number of assets to buy.
     function rebalance(uint256 buysLength) public {
+        //TODO refactor this function.
+        // What we want to do is :
+        // - get the total portfolio value
+        // - for each token, get the theoritical value of the token in the portfolio
+        // - if the current value is lower then the theoritical one, we swap WETH > token
+        // - otherwise, we swap ERC20 > token
+        // - we do this for each token in the portfolio
+        // - The amountOut of the swap should be calculated based on the price sent by the oracle
+
         // Get the portfolio value
         uint256 portfolioValue = getPortfolioValue();
         uint256 factor = 100;
@@ -294,6 +304,10 @@ contract Portfolio is Ownable, SharedFund {
 
         // Calculate the proportion of each asset and rebalance
         for (uint256 i = 0; i < tokens.length; i++) {
+            // We only buy / sell other ERC20s, not WETH
+            if (tokens[i] == address(WETH9)) {
+                continue;
+            }
             uint256 requiredValue = portfolioValue * assets[tokens[i]].proportion / factor;
             uint256 currentPrice = uint256(priceFeeds.getLatestPrice(tokens[i]));
             uint256 currentBalance = IERC20(tokens[i]).balanceOf(address(this));
@@ -302,6 +316,7 @@ contract Portfolio is Ownable, SharedFund {
 
             // If the current value is equal or close to the required value, no need to rebalance the asset
             // How close the value can be to the required value is defined by the delta variable
+            //TODO the delta here is absolute and doesn't take decimals into account. FIXME
             if (
                 currentValue == requiredValue
                     || (currentValue < requiredValue + delta && currentValue > requiredValue - delta)
@@ -337,6 +352,8 @@ contract Portfolio is Ownable, SharedFund {
         if (buysCounter == 0) return;
 
         for (uint256 i = 0; i < buysLength; i++) {
+            emit log_uint(buys[i].amount);
+            emit log_uint(margin);
             uint256 diff = buys[i].amount * buys[i].price;
             if (margin < diff) {
                 diff = margin;
@@ -344,6 +361,8 @@ contract Portfolio is Ownable, SharedFund {
                 margin -= diff;
             }
             uint256 amount = diff / buys[i].price;
+            emit log_uint(diff);
+            emit log_uint(buys[i].price);
             swapAsset(buys[i].token, amount, true, buys[i].price);
         }
     }
@@ -408,7 +427,7 @@ contract Portfolio is Ownable, SharedFund {
             tokenIn: from,
             tokenOut: to,
             fee: poolFee,
-            recipient: msg.sender,
+            recipient: address(this),
             deadline: block.timestamp,
             amountIn: amountIn,
             amountOutMinimum: minOut,

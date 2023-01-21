@@ -9,7 +9,33 @@ import "./setup/TestSetup.sol";
 contract PortfolioTest is TestSetup {
     // Tests
 
-    function testGetPortfolioValue() public {
+    /// @dev initially our portfolio is 100% WETH with a balance of 0.
+    function testGetPortfolioValueOnlyEther() public {
+        uint256 wethBalance = IERC20(WETH).balanceOf(address(portfolio));
+        assertEq(wethBalance, 0);
+        uint256 portfolioValue = portfolio.getPortfolioValue();
+        assertTrue(portfolioValue == 0);
+
+        deposit(user1, 1, 1 ether);
+        wethBalance = IERC20(WETH).balanceOf(address(portfolio));
+        assertEq(wethBalance, 1 ether);
+        portfolioValue = portfolio.getPortfolioValue();
+        assertTrue(portfolioValue == 2000 * WAD);
+    }
+
+    /// @dev initially our portfolio is 100% WETH with a balance of 0.
+    ///     After depositing 1 ether, the portfolio should be 100% WETH with a balance of 1 ether.
+    ///     After adding assets and rebalancing, we should have 50% WETH and 25% BTC and 25% USDC.
+    function testGetPortfolioValueMultipleTokens() public {
+        deposit(user1, 1, 1 ether);
+        portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
+        portfolio.addAsset(BTC, 2_500, address(assets[BTC].aggregator));
+        portfolio.rebalance(2);
+        uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
+        assertEq(usdcBalance, 2_500);
+        uint256 btcBalance = IERC20(BTC).balanceOf(address(portfolio));
+        assertEq(btcBalance, 2_500);
+
         for (uint256 i = 0; i < tokens.length; i++) {
             emit log_address(tokens[i]);
         }
@@ -25,6 +51,22 @@ contract PortfolioTest is TestSetup {
         }
         //FIXME
         //        assertEq(portfolio.getPortfolioValue(), portfolioValue);
+    }
+
+    function testRebalanceLite() public {
+        deposit(user1, 1, 1 ether);
+        emit log_address(address(assets[BTC].aggregator));
+        emit log_address(address(assets[USDC].aggregator));
+
+        portfolio.addAsset(BTC, 2_500, address(assets[BTC].aggregator));
+        portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
+        portfolio.rebalance(2);
+        uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
+        assertEq(usdcBalance, 2_500);
+        uint256 btcBalance = IERC20(BTC).balanceOf(address(portfolio));
+        assertEq(btcBalance, 2_500);
+        uint256 wethBalance = IERC20(WETH).balanceOf(address(portfolio));
+        assertEq(wethBalance, 0.5 ether);
     }
 
     function testRebalance() public {

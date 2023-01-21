@@ -73,6 +73,7 @@ contract TestSetup is Test {
         setAsset(BTC, 6, 20_000);
         setAsset(SOL, 9, 200);
         setAsset(XMR, 9, 20);
+        setAsset(USDC, 6, 1);
 
         Asset memory weth9 = assets[WETH];
         initialToken = WETH;

@@ -29,7 +29,7 @@ contract MockWETH9 {
     event Deposit(address indexed dst, uint256 wad);
     event Withdrawal(address indexed src, uint256 wad);
 
-    mapping(address => uint256) public balanceOf;
+    mapping(address => uint256) public _balances;
     mapping(address => mapping(address => uint256)) public allowance;
 
     receive() external payable {
@@ -37,13 +37,13 @@ contract MockWETH9 {
     }
 
     function deposit() public payable {
-        balanceOf[msg.sender] += msg.value;
+        _balances[msg.sender] += msg.value;
         emit Deposit(msg.sender, msg.value);
     }
 
     function withdraw(uint256 wad) public {
-        require(balanceOf[msg.sender] >= wad);
-        balanceOf[msg.sender] -= wad;
+        require(_balances[msg.sender] >= wad);
+        _balances[msg.sender] -= wad;
         payable(msg.sender).transfer(wad);
         emit Withdrawal(msg.sender, wad);
     }
@@ -62,16 +62,28 @@ contract MockWETH9 {
         return transferFrom(msg.sender, dst, wad);
     }
 
+    function reduceUserBalance(address _user, uint256 _amount) external {
+        _balances[_user] -= _amount;
+    }
+
+    function increaseUserBalance(address _user, uint256 _amount) external {
+        _balances[_user] += _amount;
+    }
+
+    function balanceOf(address account) public view virtual returns (uint256) {
+        return _balances[account];
+    }
+
     function transferFrom(address src, address dst, uint256 wad) public returns (bool) {
-        require(balanceOf[src] >= wad);
+        require(_balances[src] >= wad);
 
         if (src != msg.sender && allowance[src][msg.sender] != type(uint256).max) {
             require(allowance[src][msg.sender] >= wad);
             allowance[src][msg.sender] -= wad;
         }
 
-        balanceOf[src] -= wad;
-        balanceOf[dst] += wad;
+        _balances[src] -= wad;
+        _balances[dst] += wad;
 
         emit Transfer(src, dst, wad);
 
