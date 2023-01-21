@@ -13,6 +13,7 @@ contract TestDeposit is TestSetup {
         // 100% of the share
         vm.stopPrank();
         assertEq(portfolio.shareOf(1), 0);
+        assertEq(IERC20(WETH).balanceOf(address(portfolio)), 0 ether);
     }
 
     /// @dev Tests withdrawing 50% of a user's shares. The user should receive 50% of the ETH back and
@@ -23,6 +24,7 @@ contract TestDeposit is TestSetup {
         portfolio.withdraw(1, PercentageMath.HALF_PERCENTAGE_FACTOR);
         assertEq(portfolio.shareOf(1), PERCENTAGE_FACTOR);
         assertEq(portfolio.getPortfolioValue(), 1000 * WAD);
+        assertEq(IERC20(WETH).balanceOf(address(portfolio)), 0.5 ether);
     }
 
     /// @dev Tests withdrawing 50% of a user's shares. The user should receive 50% of his ETH back and
@@ -36,6 +38,7 @@ contract TestDeposit is TestSetup {
         assertApproxEqAbs(portfolio.shareOf(1), PERCENTAGE_FACTOR / 3, 1);
         assertApproxEqAbs(portfolio.shareOf(2), 2 * PERCENTAGE_FACTOR / 3, 1);
         assertEq(portfolio.getPortfolioValue(), 3000 * 10 ** 18);
+        assertEq(IERC20(WETH).balanceOf(address(portfolio)), 1.5 ether);
         vm.stopPrank();
     }
 }

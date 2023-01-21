@@ -6,11 +6,14 @@ import "./setup/TestSetup.sol";
 contract TestDeposit is TestSetup {
     /// @dev Tests depositing 1 ether into the fund. The user should have 1 ether in the fund and
     ///      the share for its NFT should be equal to 100% since he's the only user in the fund.
+    ///      The deposit function should wrap the ether received.
     function testDepositOneUser() public {
+        emit log_address(WETH);
         deposit(user1, 1, 1 ether);
         uint256 share = portfolio.shareOf(1);
 
         assertEq(portfolio.shareOf(1), PERCENTAGE_FACTOR);
+        assertEq(IERC20(WETH).balanceOf(address(portfolio)), 1 ether);
     }
 
     /// @dev Tests depositing 1 ether into the fund for two users. The users should have 1 ether each in the fund and
@@ -20,6 +23,7 @@ contract TestDeposit is TestSetup {
         deposit(user2, 2, 1 ether);
         assertEq(portfolio.shareOf(1), PercentageMath.HALF_PERCENTAGE_FACTOR);
         assertEq(portfolio.shareOf(2), PercentageMath.HALF_PERCENTAGE_FACTOR);
+        assertEq(IERC20(WETH).balanceOf(address(portfolio)), 2 ether);
     }
 
     /// @dev Tests depositing 1 ether into the fund for three users. The users should have 1 ether each in the fund and
@@ -32,6 +36,7 @@ contract TestDeposit is TestSetup {
         assertEq(portfolio.shareOf(1), oneThirdPercentageFactor);
         assertEq(portfolio.shareOf(2), oneThirdPercentageFactor);
         assertEq(portfolio.shareOf(3), oneThirdPercentageFactor);
+        assertEq(IERC20(WETH).balanceOf(address(portfolio)), 3 ether);
     }
 
     /// @dev Tests depositing 1 ether into the fund by a user that doesn't own an NFT.
@@ -48,5 +53,6 @@ contract TestDeposit is TestSetup {
         deposit(user2, 2, 1 ether);
         deposit(user2, 2, 1 ether);
         assertApproxEqAbs(portfolio.shareOf(2), 2 * PercentageMath.PERCENTAGE_FACTOR / 3, 1);
+        assertEq(IERC20(WETH).balanceOf(address(portfolio)), 3 ether);
     }
 }

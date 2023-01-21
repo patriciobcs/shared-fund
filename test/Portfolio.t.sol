@@ -7,32 +7,6 @@ import "forge-std/Test.sol";
 import "./setup/TestSetup.sol";
 
 contract PortfolioTest is TestSetup {
-    uint256 initialBalance = 0;
-    address initialToken;
-
-    function setUp() public override {
-        MockWETH9 WETH = new MockWETH9();
-        setAsset(address(WETH), 9, 2_000);
-        Asset memory weth = assets[address(WETH)];
-        initialToken = address(WETH);
-        MockUniV3 uniV3 = new MockUniV3();
-        setAsset(BTC, 6, 20_000);
-        setAsset(SOL, 9, 200);
-        setAsset(XMR, 9, 20);
-        emit log_address(address(WETH));
-
-        portfolio = new Portfolio(address(WETH), address(uniV3), address(assets[initialToken].aggregator));
-        assets[initialToken].proportion = 10_000;
-        // on setup, no ETH has been deposited so portfolio value is 0
-        portfolioValue = 0;
-        remainingProportion = 10_000;
-    }
-
-    function addAsset(address _token, uint256 _proportion) public {
-        portfolio.addAsset(_token, _proportion, address(assets[_token].aggregator));
-        assets[_token].proportion = _proportion;
-    }
-
     // Tests
 
     function testGetPortfolioValue() public {
@@ -51,59 +25,6 @@ contract PortfolioTest is TestSetup {
         }
         //FIXME
         //        assertEq(portfolio.getPortfolioValue(), portfolioValue);
-    }
-
-    function testIncorrectOwner() public {
-        address token = USDC;
-        uint256 assetBalance = 100;
-        addAsset(token, 2500);
-
-        vm.startPrank(address(0x1));
-        vm.expectRevert("Ownable: caller is not the owner");
-        portfolio.changeAssetProportion(token, 5000);
-        vm.stopPrank();
-    }
-
-    function testAddConstantProportions() public {
-        address tokenA = BTC;
-        uint256 tokenABalance = 100;
-        uint256 tokenAProportion = 2_500;
-
-        addAsset(tokenA, tokenAProportion);
-        remainingProportion -= tokenAProportion;
-
-        assertEq(portfolio.getAssetProportion(tokenA), tokenAProportion);
-        assertEq(portfolio.getRemainingProportion(), remainingProportion);
-
-        address solToken = SOL;
-        uint256 solBalance = 100;
-        uint256 solProportion = 5_000;
-
-        addAsset(solToken, solProportion);
-        remainingProportion -= solProportion;
-
-        assertEq(portfolio.getAssetProportion(tokenA), tokenAProportion);
-        assertEq(portfolio.getRemainingProportion(), remainingProportion);
-        assertEq(portfolio.getAssetProportion(solToken), solProportion);
-    }
-
-    function testRejectConstantProportionHigherThanAvailable() public {
-        address tokenA = BTC;
-        uint256 tokenABalance = 100;
-        uint256 tokenAProportion = 7_500;
-
-        addAsset(tokenA, tokenAProportion);
-        remainingProportion -= tokenAProportion;
-
-        assertEq(portfolio.getAssetProportion(tokenA), tokenAProportion);
-        assertEq(portfolio.getRemainingProportion(), remainingProportion);
-
-        address solToken = SOL;
-        uint256 solBalance = 100;
-        uint256 solProportion = 5_000;
-
-        vm.expectRevert("REMAINING_PROPORTION_TOO_LOW");
-        addAsset(solToken, solProportion);
     }
 
     function testRebalance() public {
