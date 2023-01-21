@@ -6,7 +6,6 @@ import "openzeppelin-contracts/access/Ownable.sol";
 import "./SharedFund.sol";
 import "uniswap-v3-periphery/libraries/TransferHelper.sol";
 import "uniswap-v3-periphery/interfaces/ISwapRouter.sol";
-import "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/PercentageMath.sol";
 import "./interfaces/external/IWETH.sol";
 
@@ -15,7 +14,6 @@ import "./interfaces/external/IWETH.sol";
  * @notice A contract to manage a portfolio of assets
  */
 contract Portfolio is Ownable, SharedFund {
-    using WadRayMath for uint256;
     using PercentageMath for uint256;
 
     struct Asset {
@@ -30,75 +28,64 @@ contract Portfolio is Ownable, SharedFund {
 
     /// @dev the base currency of our portfolio. It's the currency we use to buy assets.
     /// and the one we get when we sell assets.
-    string portfolioCurrency = "WETH";
+    address portfolioCurrency;
 
-    /// @dev Maps an ERC20 token address to the
-    mapping(string => Asset) public assets; // symbols => balance
-    string[] public symbols; // symbols
+    /// @dev Maps an ERC20 token address its data in the portfolio.
+    mapping(address => Asset) public assets; // ERC20 token => balance
+
+    /// @dev List of assets in the portfolio.
+    address[] public tokens;
     PriceFeedConsumer internal priceFeeds; // price feed consumer (chainlink)
-    string public baseSymbol; // symbol use as a base pair in the swaps
     uint256 public flexibleProportion; // total amount of proportion that are static
-    uint256 WAD = WadRayMath.WAD;
 
     ISwapRouter public immutable swapRouter;
     uint24 public constant poolFee = 3000;
-    mapping(string => address) public symbolAddress;
 
     struct BuyOrder {
-        string symbol;
+        address token;
         uint256 amount;
         uint256 price;
     }
 
-    event Buy(string symbol, uint256 amount, uint256 price, uint256 change);
-    event Sell(string symbol, uint256 amount, uint256 price, uint256 change);
-    event AssetState(string symbol, uint256 balance, uint256 value, uint256 required_value, uint256 proportion);
-    event AssetRemoved(string symbol);
+    event Buy(address token, uint256 amount, uint256 price, uint256 change);
+    event Sell(address token, uint256 amount, uint256 price, uint256 change);
+    event AssetState(address token, uint256 balance, uint256 value, uint256 required_value, uint256 proportion);
+    event AssetRemoved(address token);
 
-    constructor(
-        address _weth,
-        uint256 _balance,
-        bool _isFlexible,
-        address _priceFeed,
-        address _swapRouter,
-        address _WETH
-    ) {
+    constructor(address _weth, address _swapRouter, bool _isFlexible, address _priceFeed) {
         weth = IWETH(_weth);
+        swapRouter = ISwapRouter(_swapRouter);
+        portfolioCurrency = _weth;
 
-        // Add first asset to the portfolio
-        priceFeeds = new PriceFeedConsumer(_symbol, _priceFeed);
-        assets[_symbol].balance = _balance;
-        assets[_symbol].proportion = 100;
-        assets[_symbol].isFlexible = _isFlexible;
-        symbols.push(_symbol);
+        // Add the price feed for the portfolio base currency, WETH.
+        priceFeeds = new PriceFeedConsumer(_weth, _priceFeed);
+        assets[_weth].proportion = 100;
+        assets[_weth].isFlexible = _isFlexible;
+        tokens.push(_weth);
 
         if (_isFlexible) {
             flexibleProportion = 100;
         }
+    }
 
-        /// Uniswap part
-        swap = new ISwapRouter(_swapRouter);
-        //Next i think we can add it through the front
-        symbolAddress["USDC"] = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-        symbolAddress["ETH"] = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-        symbolAddress["BTC"] = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-        symbolAddress["LINK"] = 0x514910771AF9Ca656af840dff83E8264EcF986CA;
+    receive() external payable {
+        assert(msg.sender == address(weth)); // only accept ETH via fallback from the WETH contract
     }
 
     /**
-     * @notice Receive function called by users that will deposit funds for a portfolio share.
+     * @notice Deposit function called by users that will deposit funds for a portfolio share.
      * This rebalances the amount of shares each owner has.
      * @dev This function is payable and will receive ETH from the user. The function will wrap the ether sent by the user into WETH.
      * @param tokenId The ID of the token to deposit funds for.
      */
-    receive(uint256 tokenId) external payable {
+    function deposit(uint256 tokenId) external payable {
         require(ownerOf(tokenId) == msg.sender, "You are not the owner of this share");
         uint256 previousValue = getPortfolioValue();
 
         // register the deposited ETH in the balances
         uint256 depositedAmount = msg.value;
         // Since UNIv3 is in WETH, we need to convert ETH to WETH
-        weth.deposit.value(msg.value)();
+        weth.deposit{value: msg.value}();
 
         assets[portfolioCurrency].balance += depositedAmount;
         uint256 newValue = getPortfolioValue();
@@ -113,8 +100,8 @@ contract Portfolio is Ownable, SharedFund {
             depositedShare = (depositedValue * PercentageMath.PERCENTAGE_FACTOR) / newValue;
         }
         rebalanceShares(previousValue, newValue);
-        shares[tokenId] += depositedShare;
         // update share of the token
+        shares[tokenId] += depositedShare;
     }
 
     /**
@@ -180,65 +167,62 @@ contract Portfolio is Ownable, SharedFund {
     /**
      * @notice Adds a new asset to the portfolio
      */
-    function addAsset(
-        string memory _symbol,
-        uint256 _balance,
-        uint256 _proportion,
-        bool _isFlexible,
-        address _priceFeed
-    ) public onlyOwner assetDoesNotExist(_symbol) {
+    function addAsset(address _token, uint256 _proportion, bool _isFlexible, address _priceFeed)
+        public
+        onlyOwner
+        assetDoesNotExist(_token)
+    {
         require(_proportion < flexibleProportion, "Not sufficient proportion available.");
 
         uint256 rest = flexibleProportion - _proportion;
 
-        for (uint256 i = 0; i < symbols.length; i++) {
-            if (assets[symbols[i]].isFlexible) {
-                assets[symbols[i]].proportion = assets[symbols[i]].proportion * rest / flexibleProportion;
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (assets[tokens[i]].isFlexible) {
+                assets[tokens[i]].proportion = assets[tokens[i]].proportion * rest / flexibleProportion;
             }
         }
 
         if (!_isFlexible) flexibleProportion = rest;
 
-        priceFeeds.addPriceFeed(_symbol, _priceFeed);
-        assets[_symbol].balance = _balance;
-        assets[_symbol].proportion = _proportion;
-        assets[_symbol].isFlexible = _isFlexible;
-        symbols.push(_symbol);
+        priceFeeds.addPriceFeed(_token, _priceFeed);
+        assets[_token].proportion = _proportion;
+        assets[_token].isFlexible = _isFlexible;
+        tokens.push(_token);
     }
 
     /**
      * @notice Change asset balance to the portfolio
      */
-    function changeAssetBalance(string memory _symbol, uint256 _change, bool _isAddition)
+    function changeAssetBalance(address _token, uint256 _change, bool _isAddition)
         public
         onlyOwner
-        assetExists(_symbol)
+        assetExists(_token)
     {
         // if addition is true, add the change to the balance
         if (_isAddition) {
-            assets[_symbol].balance += _change;
+            assets[_token].balance += _change;
             // if the change is less than the balance, substract the change from the balance
-        } else if (assets[_symbol].balance > _change) {
-            assets[_symbol].balance -= _change;
+        } else if (assets[_token].balance > _change) {
+            assets[_token].balance -= _change;
             // otherwise, set the balance to 0
         } else {
-            assets[_symbol].balance = 0;
+            assets[_token].balance = 0;
         }
 
         // If the asset balance is 0, remove the asset from the portfolio
-        if (assets[_symbol].balance == 0) {
+        if (assets[_token].balance == 0) {
             // Remove the asset's price feed
-            priceFeeds.removePriceFeed(_symbol);
+            priceFeeds.removePriceFeed(_token);
 
             // Remove the asset from the assets array
-            for (uint256 i = 0; i < symbols.length; i++) {
-                if (keccak256(abi.encodePacked(symbols[i])) == keccak256(abi.encodePacked(_symbol))) {
-                    symbols[i] = symbols[symbols.length - 1];
-                    symbols.pop();
+            for (uint256 i = 0; i < tokens.length; i++) {
+                if (tokens[i] == _token) {
+                    tokens[i] = tokens[tokens.length - 1];
+                    tokens.pop();
                     break;
                 }
             }
-            emit AssetRemoved(_symbol);
+            emit AssetRemoved(_token);
         }
     }
 
@@ -256,9 +240,9 @@ contract Portfolio is Ownable, SharedFund {
      */
     function getPortfolioValue() public view returns (uint256) {
         uint256 portfolioValue = 0;
-        for (uint256 i = 0; i < symbols.length; i++) {
+        for (uint256 i = 0; i < tokens.length; i++) {
             // Get the asset price, multiply by the balance, and add to the portfolio value
-            portfolioValue += uint256(priceFeeds.getLatestPrice(symbols[i])) * assets[symbols[i]].balance;
+            portfolioValue += uint256(priceFeeds.getLatestPrice(tokens[i])) * assets[tokens[i]].balance;
         }
         return portfolioValue;
     }
@@ -267,9 +251,9 @@ contract Portfolio is Ownable, SharedFund {
      * @notice Returns the asset value
      * @return asset balance
      */
-    function getAssetValue(string memory _symbol) public view assetExists(_symbol) returns (uint256) {
+    function getAssetValue(address _token) public view assetExists(_token) returns (uint256) {
         // Get the asset price, multiply by the balance, and add to the portfolio value
-        return uint256(priceFeeds.getLatestPrice(_symbol)) * assets[_symbol].balance;
+        return uint256(priceFeeds.getLatestPrice(_token)) * assets[_token].balance;
     }
 
     /**
@@ -277,24 +261,26 @@ contract Portfolio is Ownable, SharedFund {
      * @return asset balance
      *
      */
-    function getAssetProportion(string memory _symbol) public view assetExists(_symbol) returns (uint256) {
-        return assets[_symbol].proportion;
+    function getAssetProportion(address _token) public view assetExists(_token) returns (uint256) {
+        return assets[_token].proportion;
     }
 
     /**
      * @notice Swap an asset for another
      *
      */
-    function swapAsset(string memory _symbol, uint256 _amount, bool _isBuy, uint256 _price) private {
+    function swapAsset(address _token, uint256 _amount, bool _isBuy, uint256 _price) private {
         // If buy is true, then
-        changeAssetBalance(_symbol, _amount, _isBuy);
+        changeAssetBalance(_token, _amount, _isBuy);
 
         if (_isBuy) {
-            assets[_symbol].balance += swap.swapTokens(portfolioCurrency, _symbol, _amount, _price);
-            emit Buy(_symbol, _amount, _price, _amount * _price);
+            //FIXME this is wrong since we're not decrementing the balance of the asset we're selling
+            assets[_token].balance += swapTokens(portfolioCurrency, _token, _amount, _price);
+            emit Buy(_token, _amount, _price, _amount * _price);
         } else {
-            assets[portfolioCurrency].balance += swap.swapTokens(_symbol, portfolioCurrency, _amount, _price);
-            emit Sell(_symbol, _amount, _price, _amount * _price);
+            //FIXME this is also wrong
+            assets[portfolioCurrency].balance += swapTokens(_token, portfolioCurrency, _amount, _price);
+            emit Sell(_token, _amount, _price, _amount * _price);
         }
     }
 
@@ -312,12 +298,12 @@ contract Portfolio is Ownable, SharedFund {
         uint256 margin = 0;
 
         // Calculate the proportion of each asset and rebalance
-        for (uint256 i = 0; i < symbols.length; i++) {
-            uint256 requiredValue = portfolioValue * assets[symbols[i]].proportion / factor;
-            uint256 currentPrice = uint256(priceFeeds.getLatestPrice(symbols[i]));
-            uint256 currentBalance = assets[symbols[i]].balance;
+        for (uint256 i = 0; i < tokens.length; i++) {
+            uint256 requiredValue = portfolioValue * assets[tokens[i]].proportion / factor;
+            uint256 currentPrice = uint256(priceFeeds.getLatestPrice(tokens[i]));
+            uint256 currentBalance = assets[tokens[i]].balance;
             uint256 currentValue = currentPrice * currentBalance;
-            emit AssetState(symbols[i], currentBalance, currentValue, requiredValue, assets[symbols[i]].proportion);
+            emit AssetState(tokens[i], currentBalance, currentValue, requiredValue, assets[tokens[i]].proportion);
 
             // If the current value is equal or close to the required value, no need to rebalance the asset
             // How close the value can be to the required value is defined by the delta variable
@@ -342,11 +328,11 @@ contract Portfolio is Ownable, SharedFund {
             }
 
             if (isSell) {
-                swapAsset(symbols[i], amount, false, currentPrice);
+                swapAsset(tokens[i], amount, false, currentPrice);
             } else {
                 // Add the asset to the buys array
                 require(buysCounter < buysLength, "The passed buys length is lower than the expected.");
-                buys[buysCounter] = BuyOrder(symbols[i], amount, currentPrice);
+                buys[buysCounter] = BuyOrder(tokens[i], amount, currentPrice);
                 buysCounter++;
             }
         }
@@ -363,17 +349,17 @@ contract Portfolio is Ownable, SharedFund {
                 margin -= diff;
             }
             uint256 amount = diff / buys[i].price;
-            swapAsset(buys[i].symbol, amount, true, buys[i].price);
+            swapAsset(buys[i].token, amount, true, buys[i].price);
         }
     }
 
-    modifier assetExists(string memory _symbol) {
-        require(assets[_symbol].balance > 0, "Asset does not exist in the portfolio.");
+    modifier assetExists(address _token) {
+        require(assets[_token].proportion > 0, "Asset does not exist in the portfolio.");
         _;
     }
 
-    modifier assetDoesNotExist(string memory _symbol) {
-        require(assets[_symbol].balance == 0, "Asset already exists in the portfolio.");
+    modifier assetDoesNotExist(address _token) {
+        require(assets[_token].proportion == 0, "Asset already exists in the portfolio.");
         _;
     }
 
@@ -381,20 +367,19 @@ contract Portfolio is Ownable, SharedFund {
      * @notice Swap Token through Uniswap
      */
     function swapTokens(address from, address to, uint256 amountIn, uint256 minOut)
-        external
+        internal
         returns (uint256 amountOut)
     {
-        TransferHelper.safeTransferFrom(symbolAddress[from], msg.sender, address(this), amountIn);
-        TransferHelper.safeApprove(symbolAddress[from], address(swapRouter), amountIn);
+        TransferHelper.safeApprove(from, address(swapRouter), amountIn);
 
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
-            tokenIn: symbolAddress[from],
-            tokenOut: symbolAddress[to],
+            tokenIn: from,
+            tokenOut: to,
             fee: poolFee,
-            recipient: mg.sender,
+            recipient: msg.sender,
             deadline: block.timestamp,
             amountIn: amountIn,
-            amoutOutMinimum: minOut,
+            amountOutMinimum: minOut,
             sqrtPriceLimitX96: 0
         });
 

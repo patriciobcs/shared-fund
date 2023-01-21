@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 import "../../src/Portfolio.sol";
 import "../mocks/MockV3Aggregator.sol";
 import "forge-std/Test.sol";
+import "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
+import "../mocks/MockUniV3.sol";
+import "../mocks/MockWETH.sol";
 
 contract TestSetup is Test {
     struct Asset {
@@ -15,8 +18,8 @@ contract TestSetup is Test {
         MockV3Aggregator aggregator;
     }
 
-    mapping(string => Asset) public assets;
-    string[] public symbols;
+    mapping(address => Asset) public assets;
+    address[] public tokens;
     uint256 portfolioValue;
     Portfolio public portfolio;
     uint256 WAD = WadRayMath.WAD;
@@ -26,18 +29,27 @@ contract TestSetup is Test {
     address user2 = address(0x456);
     address user3 = address(0x789);
 
+    address SOL = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address WETH;
+    address BTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
+    address XMR = 0x514910771AF9Ca656af840dff83E8264EcF986CA;
+    address USDC = 0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557;
+
     // Contract creation with
     function setUp() public virtual {
-        setAsset("ETH", 9, 2_000);
-        Asset memory eth = assets["ETH"];
-        portfolio = new Portfolio("ETH", eth.balance, true, address(eth.aggregator));
+        MockWETH9 WETH = new MockWETH9();
+        setAsset(address(WETH), 9, 2_000);
+        Asset memory weth = assets[address(WETH)];
+
+        MockUniV3 uniV3 = new MockUniV3();
+        portfolio = new Portfolio(address(WETH), address(uniV3), true, address(weth.aggregator));
         inviteUsers();
     }
 
-    function setAsset(string memory _symbol, uint8 _decimals, uint256 _price) public {
+    function setAsset(address _token, uint8 _decimals, uint256 _price) public {
         MockV3Aggregator mockV3AggregatorETH = new MockV3Aggregator(_decimals, int(_price));
-        assets[_symbol] = Asset(_decimals, _price, 0, 0, true, mockV3AggregatorETH);
-        symbols.push(_symbol);
+        assets[_token] = Asset(_decimals, _price, 0, 0, true, mockV3AggregatorETH);
+        tokens.push(_token);
     }
 
     function inviteUsers() internal {

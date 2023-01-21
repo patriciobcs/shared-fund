@@ -9,6 +9,7 @@ import "../test/mocks/MockV3Aggregator.sol";
 contract DeployPriceFeedConsumer is Script, HelperConfig {
     uint8 constant DECIMALS = 18;
     int256 constant INITIAL_ANSWER = 2000e18;
+    address BTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
 
     function run() external {
         HelperConfig helperConfig = new HelperConfig();
@@ -21,7 +22,7 @@ contract DeployPriceFeedConsumer is Script, HelperConfig {
 
         vm.startBroadcast();
 
-        new PriceFeedConsumer("BTC", priceFeed);
+        new PriceFeedConsumer(BTC, priceFeed);
 
         vm.stopBroadcast();
     }
