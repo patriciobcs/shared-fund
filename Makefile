@@ -12,7 +12,9 @@ remappings :; forge remappings > remappings.txt
 # Remove modules
 remove :; rm -rf .gitmodules && rm -rf .git/modules/* && rm -rf lib && touch .gitmodules && git add . && git commit -m "modules" -n
 
-install :; forge install smartcontractkit/chainlink-brownie-contracts --no-commit && forge install foundry-rs/forge-std --no-commit && forge install openzeppelin/openzeppelin-contracts --no-commit && forge install aave/aave-v3-core --no-commit
+install :; forge install smartcontractkit/chainlink-brownie-contracts --no-commit && forge install foundry-rs/forge-std --no-commit && \
+forge install openzeppelin/openzeppelin-contracts --no-commit && forge install aave/aave-v3-core --no-commit \
+&& forge install https://github.com/Uniswap/v3-core --no-commit && forge install https://github.com/Uniswap/v3-periphery --no-commit
 
 # Update Dependencies
 update:; forge update

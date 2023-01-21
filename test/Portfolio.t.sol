@@ -47,7 +47,7 @@ contract PortfolioTest is TestSetup {
     function testAddAssets() public {
         // i = 1 because WETH has already been added in setUp()
         for (uint256 i = 1; i < tokens.length; i++) {
-            addAsset(tokens[i], 2500);
+            addAsset(tokens[i], 2000);
         }
         //FIXME
         //        assertEq(portfolio.getPortfolioValue(), portfolioValue);
