@@ -5,8 +5,9 @@ import "../../src/Portfolio.sol";
 import "../mocks/MockV3Aggregator.sol";
 import "forge-std/Test.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
-import "../mocks/MockUniV3.sol";
+import "../mocks/MockUniV3Router.sol";
 import "../mocks/MockWETH.sol";
+import "../mocks/MockERC20.sol";
 
 contract TestSetup is Test {
     uint256 initialBalance = 0;
@@ -32,11 +33,13 @@ contract TestSetup is Test {
     address user2 = address(0x456);
     address user3 = address(0x789);
 
-    address SOL = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address SOL;
     address WETH;
-    address BTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-    address XMR = 0x514910771AF9Ca656af840dff83E8264EcF986CA;
-    address USDC = 0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557;
+    address BTC;
+    address XMR;
+    address USDC;
+
+    MockUniV3Router mockUniV3;
 
     /// @dev un-allocated proportion of the portfolio. Meaning that 1-allocatedProportion=remainingProportion
     /// and remainingProportion is the proportion of the portfolio that is not allocated to any asset, meaning that
@@ -49,23 +52,34 @@ contract TestSetup is Test {
     /// 3. Create a mock UNIV3 contract for swaps
     /// 4. Create mock aggregators for BTC,SOL,XMR mock tokens
     /// 5. Invite users to the portfolio
+    /// 6. Register the prices of the MockERC20 in the MockUniV3 contract
     /// This setup is used in all tests unless specifically override.
     function setUp() public virtual {
         MockWETH9 _weth9 = new MockWETH9();
+        MockERC20 _sol = new MockERC20("SOL", "SOL");
+        MockERC20 _btc = new MockERC20("BTC", "BTC");
+        MockERC20 _xmr = new MockERC20("XMR", "XMR");
+        MockERC20 _usdc = new MockERC20("USDC", "USDC");
+
         WETH = address(_weth9);
+        SOL = address(_sol);
+        BTC = address(_btc);
+        XMR = address(_xmr);
+        USDC = address(_usdc);
+
+        mockUniV3 = new MockUniV3Router();
+
         setAsset(WETH, 9, 2_000);
-        Asset memory weth9 = assets[WETH];
-        initialToken = WETH;
-        MockUniV3 uniV3 = new MockUniV3();
         setAsset(BTC, 6, 20_000);
         setAsset(SOL, 9, 200);
         setAsset(XMR, 9, 20);
 
-        portfolio = new Portfolio(WETH, address(uniV3), address(assets[initialToken].aggregator));
+        Asset memory weth9 = assets[WETH];
+        initialToken = WETH;
+        portfolio = new Portfolio(WETH, address(mockUniV3), address(assets[initialToken].aggregator));
         assets[initialToken].proportion = 10_000;
-        // on setup, no ETH has been deposited so portfolio value is 0
-        portfolioValue = 0;
         remainingProportion = 10_000;
+
         inviteUsers();
     }
 
@@ -76,6 +90,7 @@ contract TestSetup is Test {
 
     function setAsset(address _token, uint8 _decimals, uint256 _price) public {
         MockV3Aggregator mockV3AggregatorETH = new MockV3Aggregator(_decimals, int(_price));
+        mockUniV3.registerTokenPrice(_token, _price);
         assets[_token] = Asset(_decimals, _price, 0, 0, true, mockV3AggregatorETH);
         tokens.push(_token);
     }
