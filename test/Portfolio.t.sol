@@ -21,16 +21,16 @@ contract PortfolioTest is TestSetup {
         setAsset(XMR, 9, 20);
         emit log_address(address(WETH));
 
-        portfolio = new Portfolio(address(WETH), address(uniV3), true, address(assets[initialToken].aggregator));
-        assets[initialToken].proportion = 100;
+        portfolio = new Portfolio(address(WETH), address(uniV3), address(assets[initialToken].aggregator));
+        assets[initialToken].proportion = 10_000;
         // on setup, no ETH has been deposited so portfolio value is 0
         portfolioValue = 0;
+        remainingProportion = 10_000;
     }
 
-    function addAsset(address _token, uint256 _balance, uint256 _proportion, bool _isFlexible) public {
-        portfolio.addAsset(_token, _proportion, _isFlexible, address(assets[_token].aggregator));
+    function addAsset(address _token, uint256 _proportion) public {
+        portfolio.addAsset(_token, _proportion, address(assets[_token].aggregator));
         assets[_token].proportion = _proportion;
-        assets[_token].isFlexible = _isFlexible;
     }
 
     // Tests
@@ -47,8 +47,7 @@ contract PortfolioTest is TestSetup {
     function testAddAssets() public {
         // i = 1 because WETH has already been added in setUp()
         for (uint256 i = 1; i < tokens.length; i++) {
-            addAsset(tokens[i], (i + 1) * initialBalance, 25, false);
-            portfolioValue += (i + 1) * initialBalance * assets[tokens[i]].price;
+            addAsset(tokens[i], 2500);
         }
         //FIXME
         //        assertEq(portfolio.getPortfolioValue(), portfolioValue);
@@ -57,80 +56,54 @@ contract PortfolioTest is TestSetup {
     function testIncorrectOwner() public {
         address token = USDC;
         uint256 assetBalance = 100;
-        addAsset(token, assetBalance, 25, false);
+        addAsset(token, 2500);
 
         vm.startPrank(address(0x1));
         vm.expectRevert("Ownable: caller is not the owner");
-        portfolio.changeAssetProportion(token, 50);
+        portfolio.changeAssetProportion(token, 5000);
         vm.stopPrank();
     }
 
     function testAddConstantProportions() public {
         address tokenA = BTC;
         uint256 tokenABalance = 100;
-        uint256 tokenAProportion = 25;
+        uint256 tokenAProportion = 2_500;
 
-        addAsset(tokenA, tokenABalance, tokenAProportion, false);
-        assets[initialToken].proportion -= tokenAProportion;
+        addAsset(tokenA, tokenAProportion);
+        remainingProportion -= tokenAProportion;
 
         assertEq(portfolio.getAssetProportion(tokenA), tokenAProportion);
-        assertEq(portfolio.getAssetProportion(initialToken), assets[initialToken].proportion);
+        assertEq(portfolio.getRemainingProportion(), remainingProportion);
 
         address solToken = SOL;
         uint256 solBalance = 100;
-        uint256 solProportion = 50;
+        uint256 solProportion = 5_000;
 
-        addAsset(solToken, solBalance, solProportion, false);
-        assets[initialToken].proportion -= solProportion;
+        addAsset(solToken, solProportion);
+        remainingProportion -= solProportion;
 
         assertEq(portfolio.getAssetProportion(tokenA), tokenAProportion);
-        assertEq(portfolio.getAssetProportion(initialToken), assets[initialToken].proportion);
+        assertEq(portfolio.getRemainingProportion(), remainingProportion);
         assertEq(portfolio.getAssetProportion(solToken), solProportion);
     }
 
     function testRejectConstantProportionHigherThanAvailable() public {
         address tokenA = BTC;
         uint256 tokenABalance = 100;
-        uint256 tokenAProportion = 75;
+        uint256 tokenAProportion = 7_500;
 
-        addAsset(tokenA, tokenABalance, tokenAProportion, false);
-        assets[initialToken].proportion -= tokenAProportion;
+        addAsset(tokenA, tokenAProportion);
+        remainingProportion -= tokenAProportion;
 
         assertEq(portfolio.getAssetProportion(tokenA), tokenAProportion);
-        assertEq(portfolio.getAssetProportion(initialToken), assets[initialToken].proportion);
+        assertEq(portfolio.getRemainingProportion(), remainingProportion);
 
         address solToken = SOL;
         uint256 solBalance = 100;
-        uint256 solProportion = 50;
+        uint256 solProportion = 5_000;
 
-        vm.expectRevert("Not sufficient proportion available.");
-        addAsset(solToken, solBalance, solProportion, false);
-    }
-
-    function testTwoFlexibleProportionsAndOneConstantProportion() public {
-        uint256 flexibleProportion = 100;
-        address tokenA = BTC;
-        uint256 tokenABalance = 100;
-        uint256 tokenAProportion = 50;
-
-        addAsset(tokenA, tokenABalance, tokenAProportion, true);
-        assets[initialToken].proportion -= tokenAProportion;
-
-        assertEq(portfolio.getAssetProportion(tokenA), tokenAProportion);
-        assertEq(portfolio.getAssetProportion(initialToken), assets[initialToken].proportion);
-
-        address solToken = SOL;
-        uint256 solBalance = 100;
-        uint256 solProportion = 50;
-
-        addAsset(solToken, solBalance, solProportion, false);
-        flexibleProportion -= solProportion;
-        assets[tokenA].proportion = assets[tokenA].proportion * flexibleProportion / 100;
-        assets[initialToken].proportion = assets[initialToken].proportion * flexibleProportion / 100;
-
-        assertEq(portfolio.getAssetProportion(tokenA), assets[tokenA].proportion);
-        assertEq(portfolio.getAssetProportion(initialToken), assets[initialToken].proportion);
-        assertEq(portfolio.getAssetProportion(solToken), solProportion);
+        vm.expectRevert("REMAINING_PROPORTION_TOO_LOW");
+        addAsset(solToken, solProportion);
     }
 
     function testRebalance() public {
@@ -139,9 +112,9 @@ contract PortfolioTest is TestSetup {
         // BTC = 25, ETH = 25, SOL = 25, XMR = 25
         uint256 proportion = 25;
         // Initial State - [ BTC = 100% ], PV = 20_000 * 100 = 2_000_000
-        addAsset(BTC, 1_000, 25, false);
-        addAsset(SOL, 10_000, 25, false);
-        addAsset(XMR, 10_000, 25, false);
+        addAsset(BTC, 2500);
+        addAsset(SOL, 2500);
+        addAsset(XMR, 2500);
         portfolioValue = 6_200_000;
         // New State - [ BTC = 25%, ETH = 25%, SOL = 25%, XMR = 25% ]
         // Before Rebalance

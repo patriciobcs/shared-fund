@@ -35,15 +35,23 @@ contract TestSetup is Test {
     address XMR = 0x514910771AF9Ca656af840dff83E8264EcF986CA;
     address USDC = 0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557;
 
+    /// @dev un-allocated proportion of the portfolio. Meaning that 1-allocatedProportion=remainingProportion
+    /// and remainingProportion is the proportion of the portfolio that is not allocated to any asset, meaning that
+    /// it's invested in the base currency (WETH)
+    uint256 public remainingProportion;
+
     // Contract creation with
     function setUp() public virtual {
-        MockWETH9 WETH = new MockWETH9();
+        MockWETH9 _weth = new MockWETH9();
+        WETH = address(_weth);
 
         setAsset(address(WETH), 9, 2_000);
         Asset memory weth = assets[address(WETH)];
 
         MockUniV3 uniV3 = new MockUniV3();
-        portfolio = new Portfolio(address(WETH), address(uniV3), true, address(weth.aggregator));
+        portfolio = new Portfolio(address(WETH), address(uniV3), address(weth.aggregator));
+
+        remainingProportion = 10_000;
         inviteUsers();
     }
 

@@ -7,7 +7,7 @@ import "./SharedFund.sol";
 import "uniswap-v3-periphery/libraries/TransferHelper.sol";
 import "uniswap-v3-periphery/interfaces/ISwapRouter.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/PercentageMath.sol";
-import "./interfaces/external/IWETH.sol";
+import "./interfaces/external/IWETH9.sol";
 
 /**
  * @title The Portfolio contract
@@ -16,15 +16,14 @@ import "./interfaces/external/IWETH.sol";
 contract Portfolio is Ownable, SharedFund {
     using PercentageMath for uint256;
 
+    /// @dev An asset in the portfolio represented by its share and flexibility
     struct Asset {
-        uint256 balance;
         uint256 proportion;
-        bool isFlexible;
     }
 
     /// @dev Wrapped Ether contract/address. Since DEXs don't support native chain tokens
     /// we need to wrap it to ERC20.
-    IWETH public immutable weth;
+    IWETH9 public immutable WETH9;
 
     /// @dev the base currency of our portfolio. It's the currency we use to buy assets.
     /// and the one we get when we sell assets.
@@ -35,12 +34,22 @@ contract Portfolio is Ownable, SharedFund {
 
     /// @dev List of assets in the portfolio.
     address[] public tokens;
-    PriceFeedConsumer internal priceFeeds; // price feed consumer (chainlink)
-    uint256 public flexibleProportion; // total amount of proportion that are static
 
+    /// @dev The price feed consumer contract.
+    PriceFeedConsumer internal priceFeeds;
+
+    //    /// @dev un-allocated proportion of the portfolio. Meaning that 1-allocatedProportion=remainingProportion
+    //    /// and remainingProportion is the proportion of the portfolio that is not allocated to any asset, meaning that
+    //    /// it's invested in the base currency (WETH)
+    //    uint256 public remainingProportion;
+
+    /// @dev The Uniswap V3 router contract.
     ISwapRouter public immutable swapRouter;
+
+    /// @dev The Uniswap V3 pool fee.
     uint24 public constant poolFee = 3000;
 
+    /// @dev A buy order consists of a token address and an amount to buy.
     struct BuyOrder {
         address token;
         uint256 amount;
@@ -57,29 +66,24 @@ contract Portfolio is Ownable, SharedFund {
     /// @dev The constructor
     /// @param _weth The address of the WETH contract
     /// @param _swapRouter The address of the Uniswap V3 router
-    /// @param _isFlexible Whether the base currency is flexible or not
     /// @param _priceFeed The address of the price feed contract for the base currency (WETH)
-    constructor(address _weth, address _swapRouter, bool _isFlexible, address _priceFeed) {
-        weth = IWETH(_weth);
+    constructor(address _weth, address _swapRouter, address _priceFeed) {
+        WETH9 = IWETH9(_weth);
         swapRouter = ISwapRouter(_swapRouter);
         portfolioCurrency = _weth;
 
         // Add the price feed for the portfolio base currency, WETH.
         priceFeeds = new PriceFeedConsumer(_weth, _priceFeed);
-        assets[_weth].proportion = 100;
-        assets[_weth].isFlexible = _isFlexible;
+        assets[_weth].proportion = 10_000;
+        // 100% expressed in bps
         tokens.push(_weth);
-
-        if (_isFlexible) {
-            flexibleProportion = 100;
-        }
     }
 
     /// @dev Receive function to allow the contract to receive ETH.
     ///      This is needed to allow the contract to receive ETH from the WETH contract.
     ///      Users should never send ETH directly to the contract, but rather use the deposit function.
     receive() external payable {
-        assert(msg.sender == address(weth));
+        assert(msg.sender == address(WETH9));
         // only accept ETH via fallback from the WETH contract
     }
 
@@ -108,43 +112,47 @@ contract Portfolio is Ownable, SharedFund {
 
     /* -------------------------- OWNER FUNCTIONS -------------------------- */
 
-    /// @notice Adds a new asset to the portfolio.
+    /// @notice Adds a new asset to the portfolio. When adding an asset, the owner specifies the share of the fund
+    ///         the asset must represent, but the actual balance is 0. The balance is updated when the asset
+    ///         is bought through rebalancing.
     /// @dev The asset must not already be in the portfolio.
     ///      When an asset is added, a rebalance must be called to re-calculate the proportions of the assets.
     ///      And buy the asset from DEXs.
     /// @param _token The address of the token to add.
     /// @param _proportion The proportion of the portfolio to allocate to the new asset.
-    /// @param _isFlexible Whether the asset proportion is flexible or not.
     /// @param _priceFeed The address of the price feed contract for the asset.
-    function addAsset(address _token, uint256 _proportion, bool _isFlexible, address _priceFeed)
+    function addAsset(address _token, uint256 _proportion, address _priceFeed)
         public
         onlyOwner
         assetDoesNotExist(_token)
     {
-        require(_proportion < flexibleProportion, "Not sufficient proportion available.");
+        require(_proportion < getRemainingProportion(), "REMAINING_PROPORTION_TOO_LOW");
 
-        uint256 rest = flexibleProportion - _proportion;
-
-        for (uint256 i = 0; i < tokens.length; i++) {
-            if (assets[tokens[i]].isFlexible) {
-                assets[tokens[i]].proportion = assets[tokens[i]].proportion * rest / flexibleProportion;
-            }
-        }
-
-        if (!_isFlexible) flexibleProportion = rest;
-
+        uint256 remainingProportion = getRemainingProportion();
+        setRemainingProportion(remainingProportion - _proportion);
         priceFeeds.addPriceFeed(_token, _priceFeed);
         assets[_token].proportion = _proportion;
-        assets[_token].isFlexible = _isFlexible;
         tokens.push(_token);
     }
 
     /// @notice modifies the proportion of an asset in the portfolio.
     /// @dev The asset must already be in the portfolio. Only the fund owner can call this function.
+    ///      The proportion of the base currency can only be modified by changing the allocations of the other currencies.
     /// @param _token The address of the token to modify.
     /// @param _proportion The new proportion of the portfolio to allocate to the asset, expressed in PERCENTAGE_FACTOR.
     function changeAssetProportion(address _token, uint256 _proportion) public onlyOwner assetExists(_token) {
+        require(_token != address(WETH9), "Cannot change the proportion of the base currency");
+
+        uint256 oldProportion = assets[_token].proportion;
+        uint256 remainingProportion = getRemainingProportion();
         assets[_token].proportion = _proportion;
+        if (_proportion > oldProportion) {
+            remainingProportion = remainingProportion - (_proportion - oldProportion);
+            setRemainingProportion(remainingProportion);
+        } else {
+            remainingProportion = remainingProportion + (oldProportion - _proportion);
+            setRemainingProportion(remainingProportion);
+        }
 
         // If the proportion is 0, remove the asset from the portfolio
         if (_proportion == 0) {
@@ -181,8 +189,8 @@ contract Portfolio is Ownable, SharedFund {
 
     /// @notice Returns the USD value of the fund for a specific asset.
     /// @dev The value is calculated by multiplying the ERC20.balanceOf(this) by the priceFeed.
+    /// @param _token The address of the token to get the fund value of.
     /// @return USD value of the fund for a specific asset.
-    ///
     function getAssetValue(address _token) public view assetExists(_token) returns (uint256) {
         uint256 ERC20Balance = IERC20(_token).balanceOf(address(this));
         return uint256(priceFeeds.getLatestPrice(_token)) * ERC20Balance;
@@ -197,23 +205,25 @@ contract Portfolio is Ownable, SharedFund {
         return assets[_token].proportion;
     }
 
+    /// @notice Returns the unallocated proportion of the portfolio that sits in WETH.
+    function getRemainingProportion() public view returns (uint256) {
+        return getAssetProportion(address(WETH9));
+    }
+
     /* -------------------------- USERS FUNCTIONS -------------------------- */
 
-    /**
-     * @notice Deposit function called by users that will deposit funds for a portfolio share.
-     * This rebalances the amount of shares each owner has.
-     * @dev This function is payable and will receive ETH from the user. The function will wrap the ether sent by the user into WETH.
-     * @param _nftId The ID of the token to deposit funds for.
-     */
+    /// @notice Deposit function called by users that will deposit funds for a portfolio share.
+    ///         This rebalances the amount of shares each owner has.
+    /// @dev This function is payable and will receive ETH from the user. The function will wrap the ether sent by the user into WETH.
+    /// @param _nftId The ID of the token to deposit funds for.
     function deposit(uint256 _nftId) external payable onlyTokenOwner(_nftId) {
         uint256 previousValue = getPortfolioValue();
 
         // register the deposited ETH in the balances
         uint256 depositedAmount = msg.value;
         // Since UNIv3 is in WETH, we need to convert ETH to WETH
-        weth.deposit{value: msg.value}();
+        WETH9.deposit{value: msg.value}();
 
-        assets[portfolioCurrency].balance += depositedAmount;
         uint256 newValue = getPortfolioValue();
 
         // update the shares by 1. rebalancing all shares and 2. overriding the current share with the new value
@@ -230,13 +240,10 @@ contract Portfolio is Ownable, SharedFund {
         shares[_nftId] += depositedShare;
     }
 
-    /**
-     * @notice Withdraw funds from a portfolio share. This rebalances the amount of shares each owner has.
-     * @dev the WETH balance of the contract will be unwrapped to ETH and sent to the user.
-     * @param _nftId The ID of the token to withdraw funds from.
-     * @param _amount The percentage of your share to withdraw, expressed in PERCENTAGE_FACTOr. - e.g. for 50%, amount = 0.5*PERCENTAGE_FACTOR(50.00%)
-     *
-     */
+    /// @notice Withdraw funds from a portfolio share. This rebalances the amount of shares each owner has.
+    /// @dev the WETH balance of the contract will be unwrapped to ETH and sent to the user.
+    /// @param _nftId The ID of the token to withdraw funds from.
+    /// @param _amount The percentage of your share to withdraw, expressed in PERCENTAGE_FACTOr. - e.g. for 50%, amount = 0.5*PERCENTAGE_FACTOR(50.00%)
     function withdraw(uint256 _nftId, uint256 _amount) public onlyTokenOwner(_nftId) {
         require(_amount <= PercentageMath.PERCENTAGE_FACTOR, "Amount must range between 0 and 1e4");
         uint256 share = shares[_nftId];
@@ -264,9 +271,8 @@ contract Portfolio is Ownable, SharedFund {
 
         // Convert USD values to ETH amount for withdrawal
         uint256 etherToWithdraw = withdrawnValue / uint256(priceFeeds.getLatestPrice(portfolioCurrency));
-        assets[portfolioCurrency].balance -= etherToWithdraw;
 
-        weth.withdraw(etherToWithdraw);
+        WETH9.withdraw(etherToWithdraw);
         payable(msg.sender).transfer(etherToWithdraw);
     }
 
@@ -290,7 +296,7 @@ contract Portfolio is Ownable, SharedFund {
         for (uint256 i = 0; i < tokens.length; i++) {
             uint256 requiredValue = portfolioValue * assets[tokens[i]].proportion / factor;
             uint256 currentPrice = uint256(priceFeeds.getLatestPrice(tokens[i]));
-            uint256 currentBalance = assets[tokens[i]].balance;
+            uint256 currentBalance = IERC20(tokens[i]).balanceOf(address(this));
             uint256 currentValue = currentPrice * currentBalance;
             emit AssetState(tokens[i], currentBalance, currentValue, requiredValue, assets[tokens[i]].proportion);
 
@@ -344,6 +350,11 @@ contract Portfolio is Ownable, SharedFund {
 
     /* ------------------------- PRIVATE FUNCTIONS ------------------------- */
 
+    /// @notice Sets the unallocated proportion of the portfolio that sits in WETH.
+    function setRemainingProportion(uint256 _proportion) internal {
+        assets[address(WETH9)].proportion = _proportion;
+    }
+
     /**
      * @notice Rebalances the amount of shares each owner has on a deposit/withdraw event.
      * @param oldValue Old total portfolio value.
@@ -375,11 +386,11 @@ contract Portfolio is Ownable, SharedFund {
 
         if (_isBuy) {
             //FIXME this is wrong since we're not decrementing the balance of the asset we're selling
-            assets[_token].balance += swapTokens(portfolioCurrency, _token, _amount, _minOut);
+            swapTokens(portfolioCurrency, _token, _amount, _minOut);
             emit Buy(_token, _amount, _minOut);
         } else {
             //FIXME this is also wrong
-            assets[portfolioCurrency].balance += swapTokens(_token, portfolioCurrency, _amount, _minOut);
+            swapTokens(_token, portfolioCurrency, _amount, _minOut);
             emit Sell(_token, _amount, _minOut);
         }
     }

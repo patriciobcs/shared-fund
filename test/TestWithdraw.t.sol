@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import "./setup/TestSetup.sol";
 
 contract TestDeposit is TestSetup {
+    /// @dev Tests withdrawing all of a user's shares. The user should receive ETH back and
+    ///      the share for its NFT should be equal to 0.
     function testWithdrawOneUserAll() public {
         deposit(user1, 1, 1 ether);
         vm.startPrank(user1);
@@ -13,6 +15,8 @@ contract TestDeposit is TestSetup {
         assertEq(portfolio.shareOf(1), 0);
     }
 
+    /// @dev Tests withdrawing 50% of a user's shares. The user should receive 50% of the ETH back and
+    ///      the share for its NFT should be equal to 50% since he's the only user in the fund.
     function testWithdrawOneUserHalf() public {
         deposit(user1, 1, 1 ether);
         vm.startPrank(user1);
@@ -21,6 +25,9 @@ contract TestDeposit is TestSetup {
         assertEq(portfolio.getPortfolioValue(), 1000 * WAD);
     }
 
+    /// @dev Tests withdrawing 50% of a user's shares. The user should receive 50% of his ETH back and
+    ///      the share for its NFT should be equal to 1/3 since there are 2 users in the fund that deposited 1 ether each.
+    ///      After the withdrawal, the user should have 1/3 of the fund's value since he deposited 1/3 of the total value.
     function testWithdrawTwoRebalanced() public {
         deposit(user1, 1, 1 ether);
         deposit(user2, 2, 1 ether);
