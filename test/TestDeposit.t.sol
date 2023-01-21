@@ -29,7 +29,7 @@ contract TestDeposit is TestSetup {
     }
 
     function testDepositNotShareOwner() public {
-        vm.expectRevert("You are not the owner of this share");
+        vm.expectRevert("CALLER_NOT_OWNER");
         deposit(address(0x18023745), 2, 1 ether);
     }
 

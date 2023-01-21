@@ -38,6 +38,7 @@ contract TestSetup is Test {
     // Contract creation with
     function setUp() public virtual {
         MockWETH9 WETH = new MockWETH9();
+
         setAsset(address(WETH), 9, 2_000);
         Asset memory weth = assets[address(WETH)];
 

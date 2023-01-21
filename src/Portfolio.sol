@@ -47,11 +47,18 @@ contract Portfolio is Ownable, SharedFund {
         uint256 price;
     }
 
-    event Buy(address token, uint256 amount, uint256 price, uint256 change);
-    event Sell(address token, uint256 amount, uint256 price, uint256 change);
+    event Buy(address token, uint256 amount, uint256 minOut);
+    event Sell(address token, uint256 amount, uint256 minOut);
     event AssetState(address token, uint256 balance, uint256 value, uint256 required_value, uint256 proportion);
     event AssetRemoved(address token);
 
+    /* ---------------------------- CONSTRUCTOR ---------------------------- */
+
+    /// @dev The constructor
+    /// @param _weth The address of the WETH contract
+    /// @param _swapRouter The address of the Uniswap V3 router
+    /// @param _isFlexible Whether the base currency is flexible or not
+    /// @param _priceFeed The address of the price feed contract for the base currency (WETH)
     constructor(address _weth, address _swapRouter, bool _isFlexible, address _priceFeed) {
         weth = IWETH(_weth);
         swapRouter = ISwapRouter(_swapRouter);
@@ -68,105 +75,47 @@ contract Portfolio is Ownable, SharedFund {
         }
     }
 
+    /// @dev Receive function to allow the contract to receive ETH.
+    ///      This is needed to allow the contract to receive ETH from the WETH contract.
+    ///      Users should never send ETH directly to the contract, but rather use the deposit function.
     receive() external payable {
-        assert(msg.sender == address(weth)); // only accept ETH via fallback from the WETH contract
+        assert(msg.sender == address(weth));
+        // only accept ETH via fallback from the WETH contract
     }
 
-    /**
-     * @notice Deposit function called by users that will deposit funds for a portfolio share.
-     * This rebalances the amount of shares each owner has.
-     * @dev This function is payable and will receive ETH from the user. The function will wrap the ether sent by the user into WETH.
-     * @param tokenId The ID of the token to deposit funds for.
-     */
-    function deposit(uint256 tokenId) external payable {
-        require(ownerOf(tokenId) == msg.sender, "You are not the owner of this share");
-        uint256 previousValue = getPortfolioValue();
+    /* ------------------------------ MODIFIERS ---------------------------- */
 
-        // register the deposited ETH in the balances
-        uint256 depositedAmount = msg.value;
-        // Since UNIv3 is in WETH, we need to convert ETH to WETH
-        weth.deposit{value: msg.value}();
-
-        assets[portfolioCurrency].balance += depositedAmount;
-        uint256 newValue = getPortfolioValue();
-
-        // update the shares by 1. rebalancing all shares and 2. overriding the current share with the new value
-        uint256 depositedValue = depositedAmount * uint256(priceFeeds.getLatestPrice(portfolioCurrency));
-        uint256 depositedShare;
-        if (previousValue == 0) {
-            depositedShare = PercentageMath.PERCENTAGE_FACTOR;
-            // 100% of the portfolio
-        } else {
-            depositedShare = (depositedValue * PercentageMath.PERCENTAGE_FACTOR) / newValue;
-        }
-        rebalanceShares(previousValue, newValue);
-        // update share of the token
-        shares[tokenId] += depositedShare;
+    /// @dev Reverts the transaction if the caller is not the token owner
+    /// @param _nftId The NFT Id
+    modifier onlyTokenOwner(uint256 _nftId) {
+        require(ownerOf(_nftId) == msg.sender, "CALLER_NOT_OWNER");
+        _;
     }
 
-    /**
-     * @notice Rebalances the amount of shares each owner has on a deposit/withdraw event.
-     * @param oldValue Old total portfolio value.
-     * @param newValue New total portfolio value.
-     */
-    function rebalanceShares(uint256 oldValue, uint256 newValue) internal {
-        // early return if the portfolio was not initialized before as no rebalancing is required.
-        // or if the new value is null (if everything was withdrawn).
-        if (oldValue == 0 || newValue == 0) {
-            return;
-        }
-        for (uint256 i = 1; i <= totalSupply(); i++) {
-            uint256 tokenId = i;
-            uint256 share = shares[tokenId];
-            uint256 newShare = oldValue * share / (newValue);
-            shares[tokenId] = newShare;
-        }
+    /// @dev Reverts if the asset is not in the portfolio.
+    /// @param _token The address of the token to check.
+    modifier assetExists(address _token) {
+        require(assets[_token].proportion > 0, "Asset does not exist in the portfolio.");
+        _;
     }
 
-    /**
-     * @notice Withdraw funds from a portfolio share. This rebalances the amount of shares each owner has.
-     * @dev the WETH balance of the contract will be unwrapped to ETH and sent to the user.
-     * @param tokenId The ID of the token to withdraw funds from.
-     * @param amount The percentage of your share to withdraw, expressed in PERCENTAGE_FACTOr. - e.g. for 50%, amount = 0.5*PERCENTAGE_FACTOR(50.00%)
-     *
-     */
-    function withdraw(uint256 tokenId, uint256 amount) public {
-        require(ownerOf(tokenId) == msg.sender, "You are not the owner of this share");
-        require(amount <= PercentageMath.PERCENTAGE_FACTOR, "Amount must range between 0 and 1e4");
-        uint256 share = shares[tokenId];
-        // TODO once we have swaps enabled, the withdrawn value should be calculated after slippage.
-
-        // USD Values
-        uint256 totalValue = getPortfolioValue();
-        uint256 shareValue = totalValue.percentMul(share);
-        uint256 withdrawnValue = totalValue.percentMul(share).percentMul(amount);
-        require(withdrawnValue <= totalValue, "Withdrawn value must not be greater than total value");
-        uint256 newShareValue = shareValue - withdrawnValue;
-        uint256 newTotalValue = totalValue - withdrawnValue;
-
-        // rebalance other user shares based on the new total value
-        rebalanceShares(totalValue, newTotalValue);
-
-        // rebalance owner share based on withdrawn value
-        uint256 newShareRebalanced;
-        if (amount == PercentageMath.PERCENTAGE_FACTOR) {
-            newShareRebalanced = 0;
-        } else {
-            newShareRebalanced = (newShareValue * PercentageMath.PERCENTAGE_FACTOR) / (newTotalValue);
-        }
-        shares[tokenId] = newShareRebalanced;
-
-        // Convert USD values to ETH amount for withdrawal
-        uint256 etherToWithdraw = withdrawnValue / uint256(priceFeeds.getLatestPrice(portfolioCurrency));
-        assets[portfolioCurrency].balance -= etherToWithdraw;
-
-        weth.withdraw(etherToWithdraw);
-        payable(msg.sender).transfer(etherToWithdraw);
+    /// @dev Reverts if the asset is already in the portfolio.
+    /// @param _token The address of the token to check.
+    modifier assetDoesNotExist(address _token) {
+        require(assets[_token].proportion == 0, "Asset already exists in the portfolio.");
+        _;
     }
 
-    /**
-     * @notice Adds a new asset to the portfolio
-     */
+    /* -------------------------- OWNER FUNCTIONS -------------------------- */
+
+    /// @notice Adds a new asset to the portfolio.
+    /// @dev The asset must not already be in the portfolio.
+    ///      When an asset is added, a rebalance must be called to re-calculate the proportions of the assets.
+    ///      And buy the asset from DEXs.
+    /// @param _token The address of the token to add.
+    /// @param _proportion The proportion of the portfolio to allocate to the new asset.
+    /// @param _isFlexible Whether the asset proportion is flexible or not.
+    /// @param _priceFeed The address of the price feed contract for the asset.
     function addAsset(address _token, uint256 _proportion, bool _isFlexible, address _priceFeed)
         public
         onlyOwner
@@ -190,27 +139,15 @@ contract Portfolio is Ownable, SharedFund {
         tokens.push(_token);
     }
 
-    /**
-     * @notice Change asset balance to the portfolio
-     */
-    function changeAssetBalance(address _token, uint256 _change, bool _isAddition)
-        public
-        onlyOwner
-        assetExists(_token)
-    {
-        // if addition is true, add the change to the balance
-        if (_isAddition) {
-            assets[_token].balance += _change;
-            // if the change is less than the balance, substract the change from the balance
-        } else if (assets[_token].balance > _change) {
-            assets[_token].balance -= _change;
-            // otherwise, set the balance to 0
-        } else {
-            assets[_token].balance = 0;
-        }
+    /// @notice modifies the proportion of an asset in the portfolio.
+    /// @dev The asset must already be in the portfolio. Only the fund owner can call this function.
+    /// @param _token The address of the token to modify.
+    /// @param _proportion The new proportion of the portfolio to allocate to the asset, expressed in PERCENTAGE_FACTOR.
+    function changeAssetProportion(address _token, uint256 _proportion) public onlyOwner assetExists(_token) {
+        assets[_token].proportion = _proportion;
 
-        // If the asset balance is 0, remove the asset from the portfolio
-        if (assets[_token].balance == 0) {
+        // If the proportion is 0, remove the asset from the portfolio
+        if (_proportion == 0) {
             // Remove the asset's price feed
             priceFeeds.removePriceFeed(_token);
 
@@ -226,67 +163,119 @@ contract Portfolio is Ownable, SharedFund {
         }
     }
 
-    /**
-     * @notice Check if the caller is the owner of the contract
-     * @return true if the caller is the owner of the contract
-     */
-    function isOwner() internal view returns (bool) {
-        return owner() == msg.sender;
-    }
+    /* ------------------------------- VIEWS ------------------------------- */
 
-    /**
-     * @notice Returns the portfolio value
-     * @return portfolio value
-     */
+    /// @notice Returns the total value of the portfolio in USD.
+    /// @dev The value is calculated by summing the value of each asset in the portfolio.
+    ///      To get the value of each asset, we need the ERC20 balance of the fund contract and the priceFeed.
+    /// @return portfolio value
     function getPortfolioValue() public view returns (uint256) {
         uint256 portfolioValue = 0;
         for (uint256 i = 0; i < tokens.length; i++) {
+            uint256 ERC20Balance = IERC20(tokens[i]).balanceOf(address(this));
             // Get the asset price, multiply by the balance, and add to the portfolio value
-            portfolioValue += uint256(priceFeeds.getLatestPrice(tokens[i])) * assets[tokens[i]].balance;
+            portfolioValue += uint256(priceFeeds.getLatestPrice(tokens[i])) * ERC20Balance;
         }
         return portfolioValue;
     }
 
-    /**
-     * @notice Returns the asset value
-     * @return asset balance
-     */
+    /// @notice Returns the USD value of the fund for a specific asset.
+    /// @dev The value is calculated by multiplying the ERC20.balanceOf(this) by the priceFeed.
+    /// @return USD value of the fund for a specific asset.
+    ///
     function getAssetValue(address _token) public view assetExists(_token) returns (uint256) {
-        // Get the asset price, multiply by the balance, and add to the portfolio value
-        return uint256(priceFeeds.getLatestPrice(_token)) * assets[_token].balance;
+        uint256 ERC20Balance = IERC20(_token).balanceOf(address(this));
+        return uint256(priceFeeds.getLatestPrice(_token)) * ERC20Balance;
     }
 
-    /**
-     * @notice Returns the asset proportion
-     * @return asset balance
-     *
-     */
+    /// @notice Returns the portfolio share of a specific token.
+    /// @dev The share returned is the target share, not the actual share.
+    ///      The actual share share is calculated by dividing the token USD value by the funds total value.
+    /// @param _token The address of the ERC20 token to get the share of.
+    /// @return The theoretical share of the portfolio for the token.
     function getAssetProportion(address _token) public view assetExists(_token) returns (uint256) {
         return assets[_token].proportion;
     }
 
-    /**
-     * @notice Swap an asset for another
-     *
-     */
-    function swapAsset(address _token, uint256 _amount, bool _isBuy, uint256 _price) private {
-        // If buy is true, then
-        changeAssetBalance(_token, _amount, _isBuy);
+    /* -------------------------- USERS FUNCTIONS -------------------------- */
 
-        if (_isBuy) {
-            //FIXME this is wrong since we're not decrementing the balance of the asset we're selling
-            assets[_token].balance += swapTokens(portfolioCurrency, _token, _amount, _price);
-            emit Buy(_token, _amount, _price, _amount * _price);
+    /**
+     * @notice Deposit function called by users that will deposit funds for a portfolio share.
+     * This rebalances the amount of shares each owner has.
+     * @dev This function is payable and will receive ETH from the user. The function will wrap the ether sent by the user into WETH.
+     * @param _nftId The ID of the token to deposit funds for.
+     */
+    function deposit(uint256 _nftId) external payable onlyTokenOwner(_nftId) {
+        uint256 previousValue = getPortfolioValue();
+
+        // register the deposited ETH in the balances
+        uint256 depositedAmount = msg.value;
+        // Since UNIv3 is in WETH, we need to convert ETH to WETH
+        weth.deposit{value: msg.value}();
+
+        assets[portfolioCurrency].balance += depositedAmount;
+        uint256 newValue = getPortfolioValue();
+
+        // update the shares by 1. rebalancing all shares and 2. overriding the current share with the new value
+        uint256 depositedValue = depositedAmount * uint256(priceFeeds.getLatestPrice(portfolioCurrency));
+        uint256 depositedShare;
+        if (previousValue == 0) {
+            depositedShare = PercentageMath.PERCENTAGE_FACTOR;
+            // 100% of the portfolio
         } else {
-            //FIXME this is also wrong
-            assets[portfolioCurrency].balance += swapTokens(_token, portfolioCurrency, _amount, _price);
-            emit Sell(_token, _amount, _price, _amount * _price);
+            depositedShare = (depositedValue * PercentageMath.PERCENTAGE_FACTOR) / newValue;
         }
+        rebalanceShares(previousValue, newValue);
+        // update share of the token
+        shares[_nftId] += depositedShare;
     }
 
     /**
-     * @notice Rebalance the portfolio
+     * @notice Withdraw funds from a portfolio share. This rebalances the amount of shares each owner has.
+     * @dev the WETH balance of the contract will be unwrapped to ETH and sent to the user.
+     * @param _nftId The ID of the token to withdraw funds from.
+     * @param _amount The percentage of your share to withdraw, expressed in PERCENTAGE_FACTOr. - e.g. for 50%, amount = 0.5*PERCENTAGE_FACTOR(50.00%)
+     *
      */
+    function withdraw(uint256 _nftId, uint256 _amount) public onlyTokenOwner(_nftId) {
+        require(_amount <= PercentageMath.PERCENTAGE_FACTOR, "Amount must range between 0 and 1e4");
+        uint256 share = shares[_nftId];
+        // TODO once we have swaps enabled, the withdrawn value should be calculated after slippage.
+
+        // USD Values
+        uint256 totalValue = getPortfolioValue();
+        uint256 shareValue = totalValue.percentMul(share);
+        uint256 withdrawnValue = totalValue.percentMul(share).percentMul(_amount);
+        require(withdrawnValue <= totalValue, "Withdrawn value must not be greater than total value");
+        uint256 newShareValue = shareValue - withdrawnValue;
+        uint256 newTotalValue = totalValue - withdrawnValue;
+
+        // rebalance other user shares based on the new total value
+        rebalanceShares(totalValue, newTotalValue);
+
+        // rebalance owner share based on withdrawn value
+        uint256 newShareRebalanced;
+        if (_amount == PercentageMath.PERCENTAGE_FACTOR) {
+            newShareRebalanced = 0;
+        } else {
+            newShareRebalanced = (newShareValue * PercentageMath.PERCENTAGE_FACTOR) / (newTotalValue);
+        }
+        shares[_nftId] = newShareRebalanced;
+
+        // Convert USD values to ETH amount for withdrawal
+        uint256 etherToWithdraw = withdrawnValue / uint256(priceFeeds.getLatestPrice(portfolioCurrency));
+        assets[portfolioCurrency].balance -= etherToWithdraw;
+
+        weth.withdraw(etherToWithdraw);
+        payable(msg.sender).transfer(etherToWithdraw);
+    }
+
+    /// @notice Rebalances the portfolio by swapping assets to reach the target proportions.
+    /// @dev The rebalance is done by swapping the assets that are above or below the target proportion.
+    ///      The rebalance is done in 2 steps:
+    ///      1. Sell the assets that are above the target proportion.
+    ///      2. Buy the assets that are below the target proportion.
+    /// @param buysLength The number of assets to buy.
     function rebalance(uint256 buysLength) public {
         // Get the portfolio value
         uint256 portfolioValue = getPortfolioValue();
@@ -353,14 +342,46 @@ contract Portfolio is Ownable, SharedFund {
         }
     }
 
-    modifier assetExists(address _token) {
-        require(assets[_token].proportion > 0, "Asset does not exist in the portfolio.");
-        _;
+    /* ------------------------- PRIVATE FUNCTIONS ------------------------- */
+
+    /**
+     * @notice Rebalances the amount of shares each owner has on a deposit/withdraw event.
+     * @param oldValue Old total portfolio value.
+     * @param newValue New total portfolio value.
+     */
+    function rebalanceShares(uint256 oldValue, uint256 newValue) internal {
+        // early return if the portfolio was not initialized before as no rebalancing is required.
+        // or if the new value is null (if everything was withdrawn).
+        if (oldValue == 0 || newValue == 0) {
+            return;
+        }
+        for (uint256 i = 1; i <= totalSupply(); i++) {
+            uint256 tokenId = i;
+            uint256 share = shares[tokenId];
+            uint256 newShare = oldValue * share / (newValue);
+            shares[tokenId] = newShare;
+        }
     }
 
-    modifier assetDoesNotExist(address _token) {
-        require(assets[_token].proportion == 0, "Asset already exists in the portfolio.");
-        _;
+    /// @notice Swaps an asset for another asset.
+    /// @dev The swap is done on Uniswap.
+    ///      We only swap from WETH <> ERC20 for simplicity purposes.
+    /// @param _token The address of the token to swap from.
+    /// @param _amount The amount to swap.
+    /// @param _isBuy Whether we're buying or selling an ERC20 for WETH.
+    /// @param _minOut The minimum amount of tokens to receive.
+    function swapAsset(address _token, uint256 _amount, bool _isBuy, uint256 _minOut) internal {
+        // If buy is true, then
+
+        if (_isBuy) {
+            //FIXME this is wrong since we're not decrementing the balance of the asset we're selling
+            assets[_token].balance += swapTokens(portfolioCurrency, _token, _amount, _minOut);
+            emit Buy(_token, _amount, _minOut);
+        } else {
+            //FIXME this is also wrong
+            assets[portfolioCurrency].balance += swapTokens(_token, portfolioCurrency, _amount, _minOut);
+            emit Sell(_token, _amount, _minOut);
+        }
     }
 
     /**
