@@ -1,4 +1,7 @@
-import "./setup/TestSetup.sol";
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.14;
+
+import "./setup/TestSetup.t.sol";
 
 contract TestAssetProportions is TestSetup {
     function testAddConstantProportions() public {

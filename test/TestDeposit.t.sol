@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.14;
 
-import "./setup/TestSetup.sol";
+import "./setup/TestSetup.t.sol";
 
 contract TestDeposit is TestSetup {
     /// @dev Tests depositing 1 ether into the fund. The user should have 1 ether in the fund and

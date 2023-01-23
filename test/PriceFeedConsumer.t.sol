@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.14;
 
 import "../src/PriceFeedConsumer.sol";
 import "./mocks/MockV3Aggregator.sol";

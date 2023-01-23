@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.14;
 
 import "../../src/Portfolio.sol";
 import "../mocks/MockV3Aggregator.sol";
@@ -75,7 +75,6 @@ contract TestSetup is Test {
         setAsset(XMR, 9, 20);
         setAsset(USDC, 6, 1);
 
-        Asset memory weth9 = assets[WETH];
         initialToken = WETH;
         portfolio = new Portfolio(WETH, address(mockUniV3), address(assets[initialToken].aggregator));
         assets[initialToken].proportion = 10_000;
