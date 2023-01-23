@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.14;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
@@ -9,26 +9,26 @@ import "openzeppelin-contracts/access/Ownable.sol";
  * @notice A contract that returns latest price from Chainlink Price Feeds
  */
 contract PriceFeedConsumer is Ownable {
-    mapping(string => AggregatorV3Interface) internal priceFeeds;
+    mapping(address => AggregatorV3Interface) internal priceFeeds;
 
-    constructor(string memory _symbol, address _priceFeed) {
-        priceFeeds[_symbol] = AggregatorV3Interface(_priceFeed);
+    constructor(address _token, address _priceFeed) {
+        priceFeeds[_token] = AggregatorV3Interface(_priceFeed);
     }
 
     /**
      * @notice Adds a new price feed to the contract
      *
      */
-    function addPriceFeed(string memory _symbol, address _priceFeed) public priceFeedDoesNotExists(_symbol) onlyOwner {
-        priceFeeds[_symbol] = AggregatorV3Interface(_priceFeed);
+    function addPriceFeed(address _token, address _priceFeed) public priceFeedDoesNotExists(_token) onlyOwner {
+        priceFeeds[_token] = AggregatorV3Interface(_priceFeed);
     }
 
     /**
      * @notice Removes a price feed from the contract
      *
      */
-    function removePriceFeed(string memory _symbol) public priceFeedExists(_symbol) onlyOwner {
-        delete priceFeeds[_symbol];
+    function removePriceFeed(address _token) public priceFeedExists(_token) onlyOwner {
+        delete priceFeeds[_token];
     }
 
     /**
@@ -36,8 +36,8 @@ contract PriceFeedConsumer is Ownable {
      *
      * @return latest price
      */
-    function getLatestPrice(string memory _symbol) public view priceFeedExists(_symbol) returns (int256) {
-        (, int256 price,,,) = priceFeeds[_symbol].latestRoundData();
+    function getLatestPrice(address _token) public view priceFeedExists(_token) returns (int256) {
+        (, int256 price,,,) = priceFeeds[_token].latestRoundData();
         return price;
     }
 
@@ -46,17 +46,17 @@ contract PriceFeedConsumer is Ownable {
      *
      * @return Price Feed address
      */
-    function getPriceFeed(string memory _symbol) public view priceFeedExists(_symbol) returns (AggregatorV3Interface) {
-        return priceFeeds[_symbol];
+    function getPriceFeed(address _token) public view priceFeedExists(_token) returns (AggregatorV3Interface) {
+        return priceFeeds[_token];
     }
 
-    modifier priceFeedExists(string memory _symbol) {
-        require(priceFeeds[_symbol] != AggregatorV3Interface(address(0)), "Price feed does not exist.");
+    modifier priceFeedExists(address _token) {
+        require(priceFeeds[_token] != AggregatorV3Interface(address(0)), "Price feed does not exist.");
         _;
     }
 
-    modifier priceFeedDoesNotExists(string memory _symbol) {
-        require(priceFeeds[_symbol] == AggregatorV3Interface(address(0)), "Price feed already exists.");
+    modifier priceFeedDoesNotExists(address _token) {
+        require(priceFeeds[_token] == AggregatorV3Interface(address(0)), "Price feed already exists.");
         _;
     }
 }

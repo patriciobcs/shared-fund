@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.14;
 
-import "./setup/TestSetup.sol";
+import "./setup/TestSetup.t.sol";
 
 contract TestTransfer is TestSetup {
+    /// @dev Tests transferring an NFT to a user that doesn't own an NFT.
+    ///      The user receiving the NFT should be able to deposit into the fund for his received NFT.
     function testTransferShare() public {
         deposit(user1, 1, 1 ether);
         deposit(user2, 2, 1 ether);
