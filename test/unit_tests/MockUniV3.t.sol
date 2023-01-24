@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "./mocks/MockUniV3Router.sol";
+import "../mocks/MockUniV3Router.sol";
 import "forge-std/Test.sol";
 
 contract MockUniV3Test is Test {

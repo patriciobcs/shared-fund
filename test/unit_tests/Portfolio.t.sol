@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "../src/Portfolio.sol";
-import "./mocks/MockV3Aggregator.sol";
+import "../../src/Portfolio.sol";
+import "../mocks/MockV3Aggregator.sol";
 import "forge-std/Test.sol";
 import "./setup/TestSetup.t.sol";
 
