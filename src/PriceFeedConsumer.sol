@@ -39,7 +39,7 @@ contract PriceFeedConsumer is Ownable {
      */
     function getLatestPrice(address _token) public view priceFeedExists(_token) returns (uint256) {
         (, int256 price,,,) = priceFeeds[_token].latestRoundData();
-        return uint256(price * int256(CHAINLINK_PRECISION));
+        return uint256(price);
     }
 
     /**

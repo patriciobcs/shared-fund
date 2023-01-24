@@ -39,7 +39,7 @@ contract TestDeposit is TestSetup {
         assertApproxEqAbs(portfolio.shareOf(1), PERCENTAGE_FACTOR / 3, 1);
         assertApproxEqAbs(portfolio.shareOf(2), 2 * PERCENTAGE_FACTOR / 3, 1);
         assertEq(portfolio.getPortfolioValue(), 3000 * PRICEFEED_PRECISION);
-        assertEq(IERC20(WETH).balanceOf(address(portfolio)), 1.5 ether);
+        assertEq(wethBalance, 1.5 ether);
         vm.stopPrank();
     }
 }

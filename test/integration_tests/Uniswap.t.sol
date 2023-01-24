@@ -25,7 +25,6 @@ contract TestUniswapIntegration is TestForkSetup {
         uint256 wethBalance = IWETH9(WETH).balanceOf(user1);
         assertEq(wethBalance, 1 ether);
         uint256 amountIn = 1 ether;
-        address wethUsdcPool = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
         TransferHelper.safeApprove(WETH, address(swapRouter), amountIn);
         ISwapRouter(swapRouter).exactInputSingle(
             ISwapRouter.ExactInputSingleParams({

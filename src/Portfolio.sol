@@ -217,8 +217,6 @@ contract Portfolio is Ownable, SharedFund {
     function deposit(uint256 _nftId) external payable onlyTokenOwner(_nftId) {
         uint256 previousValue = getPortfolioValue();
 
-        // register the deposited ETH in the balances
-        uint256 depositedAmount = msg.value;
         // Since UNIv3 is in WETH, we need to convert ETH to WETH
         WETH9.deposit{value: msg.value}();
 

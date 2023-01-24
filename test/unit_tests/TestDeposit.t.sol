@@ -11,7 +11,7 @@ contract TestDeposit is TestSetup {
         deposit(user1, 1, 1 ether);
         uint256 share = portfolio.shareOf(1);
 
-        assertEq(portfolio.shareOf(1), PERCENTAGE_FACTOR);
+        assertEq(share, PERCENTAGE_FACTOR);
         assertEq(IERC20(WETH).balanceOf(address(portfolio)), 1 ether);
     }
 
