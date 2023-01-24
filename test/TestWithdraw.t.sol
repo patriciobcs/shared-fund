@@ -23,7 +23,7 @@ contract TestDeposit is TestSetup {
         vm.startPrank(user1);
         portfolio.withdraw(1, PercentageMath.HALF_PERCENTAGE_FACTOR);
         assertEq(portfolio.shareOf(1), PERCENTAGE_FACTOR);
-        assertEq(portfolio.getPortfolioValue(), 1000 * WAD);
+        assertEq(portfolio.getPortfolioValue(), 1000 * PRICEFEED_PRECISION);
         assertEq(IERC20(WETH).balanceOf(address(portfolio)), 0.5 ether);
     }
 
@@ -35,9 +35,10 @@ contract TestDeposit is TestSetup {
         deposit(user2, 2, 1 ether);
         vm.startPrank(user1);
         portfolio.withdraw(1, PercentageMath.HALF_PERCENTAGE_FACTOR);
+        uint256 wethBalance = IERC20(WETH).balanceOf(address(portfolio));
         assertApproxEqAbs(portfolio.shareOf(1), PERCENTAGE_FACTOR / 3, 1);
         assertApproxEqAbs(portfolio.shareOf(2), 2 * PERCENTAGE_FACTOR / 3, 1);
-        assertEq(portfolio.getPortfolioValue(), 3000 * 10 ** 18);
+        assertEq(portfolio.getPortfolioValue(), 3000 * PRICEFEED_PRECISION);
         assertEq(IERC20(WETH).balanceOf(address(portfolio)), 1.5 ether);
         vm.stopPrank();
     }

@@ -20,85 +20,126 @@ contract PortfolioTest is TestSetup {
         wethBalance = IERC20(WETH).balanceOf(address(portfolio));
         assertEq(wethBalance, 1 ether);
         portfolioValue = portfolio.getPortfolioValue();
-        assertTrue(portfolioValue == 2000 * WAD);
+        assertTrue(portfolioValue == 2000 * PRICEFEED_PRECISION);
     }
 
-    /// @dev initially our portfolio is 100% WETH with a balance of 0.
-    ///     After depositing 1 ether, the portfolio should be 100% WETH with a balance of 1 ether.
-    ///     After adding assets and rebalancing, we should have 50% WETH and 25% BTC and 25% USDC.
+    /// @dev initially our portfolio is 100% WETH with a balance of 1 ether.
+    ///     The expected value is 2000$.
+    ///     We then rebalance for 50% WETH, 25% USDC and 25% BTC.
+    ///     The expected value is 2000$ with USDC and BTC prices fixed at 1$ and 20,000$.
     function testGetPortfolioValueMultipleTokens() public {
         deposit(user1, 1, 1 ether);
-        portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
-        portfolio.addAsset(BTC, 2_500, address(assets[BTC].aggregator));
-        portfolio.rebalance(2);
-        uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
-        assertEq(usdcBalance, 2_500);
-        uint256 btcBalance = IERC20(BTC).balanceOf(address(portfolio));
-        assertEq(btcBalance, 2_500);
-
-        for (uint256 i = 0; i < tokens.length; i++) {
-            emit log_address(tokens[i]);
-        }
         uint256 value = portfolio.getPortfolioValue();
-        //FIXME
-        //assertEq(value, portfolioValue, "Portfolio value should be the sum of all assets");
-    }
-
-    function testAddAssets() public {
-        // i = 1 because WETH has already been added in setUp()
-        for (uint256 i = 1; i < tokens.length; i++) {
-            addAsset(tokens[i], 2000);
-        }
-        //FIXME
-        //        assertEq(portfolio.getPortfolioValue(), portfolioValue);
-    }
-
-    function testRebalanceLite() public {
-        deposit(user1, 1, 1 ether);
-        emit log_address(address(assets[BTC].aggregator));
-        emit log_address(address(assets[USDC].aggregator));
-
-        portfolio.addAsset(BTC, 2_500, address(assets[BTC].aggregator));
+        assertEq(value, 2_000 * PRICEFEED_PRECISION, "Portfolio value should be the sum of all assets");
         portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
-        portfolio.rebalance(2);
+        portfolio.addAsset(BTC, 2_500, address(assets[BTC].aggregator));
+        portfolio.rebalance();
+        value = portfolio.getPortfolioValue();
+        assertEq(value, 2_000 * PRICEFEED_PRECISION, "Portfolio value should be the sum of all assets");
+    }
+
+    // @dev Tests rebalance function with only one asset to buy.
+    //      The price of ether is fixed at 2,000 USD. The price of USDC is fixed at 1 USD.
+    //      The portfolio is 100% WETH with a balance of 1 ether before rebalancing to 75% WETH and 25% USDC.
+    //      Thus, we expect to buy 0.25 ether worth of USDC, which is 500 USDC
+    //      USDC is considered to be an 18-decimal token here.
+    function testRebalanceBuyOneToken() public {
+        deposit(user1, 1, 1 ether);
+        portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
+        portfolio.rebalance();
         uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
-        assertEq(usdcBalance, 2_500);
+        assertEq(usdcBalance, 500 * ERC20_PRECISION);
+        uint256 wethBalance = IERC20(WETH).balanceOf(address(portfolio));
+        assertEq(wethBalance, 0.75 ether);
+    }
+
+    // @dev Tests rebalance function with only one asset to buy.
+    //      The price of ether is fixed at 2,000 USD. The price of USDC is fixed at 1 USD.
+    //      The price of BTC is fixed at 20,000 USD.
+    //      The portfolio is 100% WETH with a balance of 1 ether before rebalancing to 75% WETH and 25% USDC.
+    //      Thus, we expect to buy 0.25 ether worth of USDC, which is 500 USDC
+    //      And 0.25 ether worth of BTC, which is 0.025 btc
+    function testRebalanceBuyTwoTokens() public {
+        deposit(user1, 1, 1 ether);
+        portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
+        portfolio.addAsset(BTC, 2_500, address(assets[BTC].aggregator));
+        portfolio.rebalance();
+        uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
+        assertEq(usdcBalance, 500 * ERC20_PRECISION);
         uint256 btcBalance = IERC20(BTC).balanceOf(address(portfolio));
-        assertEq(btcBalance, 2_500);
+        assertEq(btcBalance, 25 * (ERC20_PRECISION / 1000));
         uint256 wethBalance = IERC20(WETH).balanceOf(address(portfolio));
         assertEq(wethBalance, 0.5 ether);
     }
 
-    function testRebalance() public {
-        // BTC = 100, ETH = 10, SOL = 10, XMR = 10
-        uint256 balance = 10;
-        // BTC = 25, ETH = 25, SOL = 25, XMR = 25
-        uint256 proportion = 25;
-        // Initial State - [ BTC = 100% ], PV = 20_000 * 100 = 2_000_000
-        addAsset(BTC, 2500);
-        addAsset(SOL, 2500);
-        addAsset(XMR, 2500);
-        portfolioValue = 6_200_000;
-        // New State - [ BTC = 25%, ETH = 25%, SOL = 25%, XMR = 25% ]
-        // Before Rebalance
-        // | Sym | Balance * Price = Value  | Proportion                        |
-        // | BTC | 20_000 * 100 = 2_000_000 | 2_000_000 / 6_200_000 = 0.32 = 32 |
-        // | ETH | 2_000 * 1000 = 2_000_000 | 2_000_000 / 6_200_000 = 0.32 = 32 |
-        // | SOL | 200 * 10000 = 2_000_000  | 2_000_000 / 6_200_000 = 0.32 = 32 |
-        // | XMR | 20 * 10000 = 200_000     | 200_000   / 6_200_000 = 0.03 = 3  |
-        // | PV  | 2_000_000 + 2_000_000 + 2_000_000 + 200_000 = 6_200_000      |
-        //FIXME when we addAsset, there's no associated balance yet.
-        //        assertEq(portfolio.getPortfolioValue(), portfolioValue);
+    // @dev Tests rebalance function with only one asset to sell.
+    //      The price of ether is fixed at 2,000 USD. The price of USDC is fixed at 1 USD.
+    //      The portfolio is 50% WETH 50% USDC and we rebalance to 100% WETH.
+    //      Thus, we expect to sell 0.5 ether worth of USDC, which is 1,000 USDC
+    function testRebalanceSellOneToken() public {
+        // setup
+        deposit(user1, 1, 1 ether);
+        portfolio.addAsset(USDC, 5_000, address(assets[USDC].aggregator));
+        portfolio.rebalance();
+        uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
+        assertEq(usdcBalance, 1_000 * 10 ** 18);
 
-        //        portfolio.rebalance(1);
-        // After Rebalance
-        // | Sym | Previous Value | New Value | Swap   | Change      | New Proportion | Operation |
-        // | BTC | 2_000_000      | 1_550_000 | -22    | -440_000    | 0.25 = 25      | Sell      |
-        // | ETH | 2_000_000      | 1_550_000 | -225   | -450_000    | 0.25 = 25      | Sell      |
-        // | SOL | 2_000_000      | 1_550_000 | -2250  | -450_000    | 0.25 = 25      | Sell      |
-        // | XMR | 200_000        | 1_550_000 | 67500  | 1_350_000   | 0.25 = 25      | Buy       |
-        // | PV  |
+        // test
+        portfolio.changeAssetProportion(USDC, 0);
+        portfolio.rebalance();
+        usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
+        assertEq(usdcBalance, 0);
+        uint256 wethBalance = IERC20(WETH).balanceOf(address(portfolio));
+        assertEq(wethBalance, 1 ether);
+    }
 
-        //        assertEq(portfolio.getPortfolioValue(), portfolioValue);
+    // @dev Tests rebalance function with only one asset to sell.
+    //      The price of ether is fixed at 2,000 USD. The price of USDC is fixed at 1 USD.
+    //      The portfolio is 50% WETH 25% USDC 25% BTC and we rebalance to 100% WETH.
+    //      Thus, we expect to sell 0.5 ether worth of USDC, which is 1,000 USDC
+    //      And 0.5 ether worth of BTC, which is 0.05 btc
+    function testRebalanceSellTwoTokens() public {
+        // setup
+        deposit(user1, 1, 1 ether);
+        portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
+        portfolio.addAsset(BTC, 2_500, address(assets[BTC].aggregator));
+        portfolio.rebalance();
+
+        // test
+        portfolio.changeAssetProportion(USDC, 0);
+        portfolio.changeAssetProportion(BTC, 0);
+        portfolio.rebalance();
+        uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
+        assertEq(usdcBalance, 0);
+        uint256 btcBalance = IERC20(BTC).balanceOf(address(portfolio));
+        assertEq(btcBalance, 0);
+        uint256 wethBalance = IERC20(WETH).balanceOf(address(portfolio));
+        assertEq(wethBalance, 1 ether);
+    }
+
+    // @dev Tests rebalance function with one asset to sell and one asset to buy.
+    //      The price of ether is fixed at 2,000 USD. The price of USDC is fixed at 1 USD.
+    //      The price of BTC is fixed at 20,000 USD.
+    //      The portfolio is 100% USDC and we rebalance to 50% WETH 25% BTC 25% USDC.
+    //      Thus, we expect to sell 0.75 ether worth of USDC , which is 1,500 USDC
+    //      And buy 0.25 ether worth of BTC, which is 0.025 btc
+    function testRebalanceSellOneBuyOne() public {
+        // setup
+        deposit(user1, 1, 1 ether);
+        portfolio.addAsset(USDC, 10_000, address(assets[USDC].aggregator));
+        portfolio.rebalance();
+        uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
+        assertEq(usdcBalance, 2_000 * ERC20_PRECISION);
+
+        // test
+        portfolio.changeAssetProportion(USDC, 2_500);
+        portfolio.addAsset(BTC, 2_500, address(assets[BTC].aggregator));
+        portfolio.rebalance();
+        usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
+        assertEq(usdcBalance, 500 * ERC20_PRECISION);
+        uint256 btcBalance = IERC20(BTC).balanceOf(address(portfolio));
+        assertEq(btcBalance, 25 * 10 ** 15);
+        uint256 wethBalance = IERC20(WETH).balanceOf(address(portfolio));
+        assertEq(wethBalance, 0.5 ether);
     }
 }

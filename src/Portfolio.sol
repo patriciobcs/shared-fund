@@ -3,6 +3,7 @@ pragma solidity ^0.8.14;
 
 import "./PriceFeedConsumer.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
+import "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./SharedFund.sol";
 import "uniswap-v3-periphery/libraries/TransferHelper.sol";
 import "uniswap-v3-periphery/interfaces/ISwapRouter.sol";
@@ -18,6 +19,7 @@ contract Portfolio is Ownable, SharedFund {
 
     /// @dev An asset in the portfolio represented by its share and flexibility
     struct Asset {
+        bool active;
         uint256 proportion;
     }
 
@@ -28,6 +30,7 @@ contract Portfolio is Ownable, SharedFund {
     /// @dev the base currency of our portfolio. It's the currency we use to buy assets.
     /// and the one we get when we sell assets.
     address portfolioCurrency;
+    uint256 portfolioCurrencyPrecision;
 
     /// @dev Maps an ERC20 token address its data in the portfolio.
     mapping(address => Asset) public assets; // ERC20 token => balance
@@ -37,6 +40,7 @@ contract Portfolio is Ownable, SharedFund {
 
     /// @dev The price feed consumer contract.
     PriceFeedConsumer internal priceFeeds;
+    uint256 priceFeedPrecision = 1e8;
 
     //    /// @dev un-allocated proportion of the portfolio. Meaning that 1-allocatedProportion=remainingProportion
     //    /// and remainingProportion is the proportion of the portfolio that is not allocated to any asset, meaning that
@@ -50,8 +54,9 @@ contract Portfolio is Ownable, SharedFund {
     uint24 public constant poolFee = 3000;
 
     /// @dev A buy order consists of a token address and an amount to buy.
-    struct BuyOrder {
-        address token;
+    struct Order {
+        bool buy;
+        bool sell;
         uint256 amount;
         uint256 price;
     }
@@ -59,8 +64,7 @@ contract Portfolio is Ownable, SharedFund {
     event Buy(address token, uint256 amount, uint256 minOut);
     event Sell(address token, uint256 amount, uint256 minOut);
     event AssetState(address token, uint256 balance, uint256 value, uint256 required_value, uint256 proportion);
-    event AssetRemoved(address token);
-    event log_uint(uint256 value);
+    event AssetProportionChanged(address token, uint256 proportion);
 
     /* ---------------------------- CONSTRUCTOR ---------------------------- */
 
@@ -72,10 +76,12 @@ contract Portfolio is Ownable, SharedFund {
         WETH9 = IWETH9(_weth);
         swapRouter = ISwapRouter(_swapRouter);
         portfolioCurrency = _weth;
+        portfolioCurrencyPrecision = 10 ** IWETH9(_weth).decimals();
 
         // Add the price feed for the portfolio base currency, WETH.
         priceFeeds = new PriceFeedConsumer(_weth, _priceFeed);
         assets[_weth].proportion = 10_000;
+        assets[_weth].active = true;
         // 100% expressed in bps
         tokens.push(_weth);
     }
@@ -100,14 +106,14 @@ contract Portfolio is Ownable, SharedFund {
     /// @dev Reverts if the asset is not in the portfolio.
     /// @param _token The address of the token to check.
     modifier assetExists(address _token) {
-        require(assets[_token].proportion > 0, "Asset does not exist in the portfolio.");
+        require(assets[_token].active == true, "Asset does not exist in the portfolio.");
         _;
     }
 
     /// @dev Reverts if the asset is already in the portfolio.
     /// @param _token The address of the token to check.
     modifier assetDoesNotExist(address _token) {
-        require(assets[_token].proportion == 0, "Asset already exists in the portfolio.");
+        require(assets[_token].active == false, "Asset already exists in the portfolio.");
         _;
     }
 
@@ -127,12 +133,13 @@ contract Portfolio is Ownable, SharedFund {
         onlyOwner
         assetDoesNotExist(_token)
     {
-        require(_proportion < getRemainingProportion(), "REMAINING_PROPORTION_TOO_LOW");
+        require(_proportion <= getRemainingProportion(), "REMAINING_PROPORTION_TOO_LOW");
 
         uint256 remainingProportion = getRemainingProportion();
         setRemainingProportion(remainingProportion - _proportion);
         priceFeeds.addPriceFeed(_token, _priceFeed);
         assets[_token].proportion = _proportion;
+        assets[_token].active = true;
         tokens.push(_token);
     }
 
@@ -155,21 +162,7 @@ contract Portfolio is Ownable, SharedFund {
             setRemainingProportion(remainingProportion);
         }
 
-        // If the proportion is 0, remove the asset from the portfolio
-        if (_proportion == 0) {
-            // Remove the asset's price feed
-            priceFeeds.removePriceFeed(_token);
-
-            // Remove the asset from the assets array
-            for (uint256 i = 0; i < tokens.length; i++) {
-                if (tokens[i] == _token) {
-                    tokens[i] = tokens[tokens.length - 1];
-                    tokens.pop();
-                    break;
-                }
-            }
-            emit AssetRemoved(_token);
-        }
+        emit AssetProportionChanged(_token, _proportion);
     }
 
     /* ------------------------------- VIEWS ------------------------------- */
@@ -177,13 +170,15 @@ contract Portfolio is Ownable, SharedFund {
     /// @notice Returns the total value of the portfolio in USD.
     /// @dev The value is calculated by summing the value of each asset in the portfolio.
     ///      To get the value of each asset, we need the ERC20 balance of the fund contract and the priceFeed.
-    /// @return portfolio value
+    /// @return Portfolio value in USD with 8 decimals of precision.
     function getPortfolioValue() public view returns (uint256) {
         uint256 portfolioValue = 0;
         for (uint256 i = 0; i < tokens.length; i++) {
             uint256 ERC20Balance = IERC20(tokens[i]).balanceOf(address(this));
-            // Get the asset price, multiply by the balance, and add to the portfolio value
-            portfolioValue += uint256(priceFeeds.getLatestPrice(tokens[i])) * ERC20Balance;
+            uint256 ERC20Decimals = IERC20Metadata(tokens[i]).decimals();
+            // The price feed returns the price in USD with 8 decimals.
+            uint256 tokenValue = (uint256(priceFeeds.getLatestPrice(tokens[i])) * ERC20Balance) / (10 ** ERC20Decimals);
+            portfolioValue += tokenValue;
         }
         return portfolioValue;
     }
@@ -228,7 +223,7 @@ contract Portfolio is Ownable, SharedFund {
         uint256 newValue = getPortfolioValue();
 
         // update the shares by 1. rebalancing all shares and 2. overriding the current share with the new value
-        uint256 depositedValue = depositedAmount * uint256(priceFeeds.getLatestPrice(portfolioCurrency));
+        uint256 depositedValue = newValue - previousValue;
         uint256 depositedShare;
         if (previousValue == 0) {
             depositedShare = PercentageMath.PERCENTAGE_FACTOR;
@@ -250,7 +245,7 @@ contract Portfolio is Ownable, SharedFund {
         uint256 share = shares[_nftId];
         // TODO once we have swaps enabled, the withdrawn value should be calculated after slippage.
 
-        // USD Values
+        // USD Values precision is 8 decimals
         uint256 totalValue = getPortfolioValue();
         uint256 shareValue = totalValue.percentMul(share);
         uint256 withdrawnValue = totalValue.percentMul(share).percentMul(_amount);
@@ -271,8 +266,8 @@ contract Portfolio is Ownable, SharedFund {
         shares[_nftId] = newShareRebalanced;
 
         // Convert USD values to ETH amount for withdrawal
-        uint256 etherToWithdraw = withdrawnValue / uint256(priceFeeds.getLatestPrice(portfolioCurrency));
 
+        uint256 etherToWithdraw = withdrawnValue * portfolioCurrencyPrecision / getBaseCurrencyPrice();
         WETH9.withdraw(etherToWithdraw);
         payable(msg.sender).transfer(etherToWithdraw);
     }
@@ -282,8 +277,7 @@ contract Portfolio is Ownable, SharedFund {
     ///      The rebalance is done in 2 steps:
     ///      1. Sell the assets that are above the target proportion.
     ///      2. Buy the assets that are below the target proportion.
-    /// @param buysLength The number of assets to buy.
-    function rebalance(uint256 buysLength) public {
+    function rebalance() public {
         //TODO refactor this function.
         // What we want to do is :
         // - get the total portfolio value
@@ -295,12 +289,10 @@ contract Portfolio is Ownable, SharedFund {
 
         // Get the portfolio value
         uint256 portfolioValue = getPortfolioValue();
-        uint256 factor = 100;
-        uint256 delta = 10;
+        uint256 baseCurrencyPrice = getBaseCurrencyPrice();
+        uint256 delta = 3 * PercentageMath.PERCENTAGE_FACTOR / 100;
 
-        BuyOrder[] memory buys = new BuyOrder[](buysLength);
-        uint256 buysCounter = 0;
-        uint256 margin = 0;
+        Order[] memory orders = new Order[](tokens.length);
 
         // Calculate the proportion of each asset and rebalance
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -308,66 +300,51 @@ contract Portfolio is Ownable, SharedFund {
             if (tokens[i] == address(WETH9)) {
                 continue;
             }
-            uint256 requiredValue = portfolioValue * assets[tokens[i]].proportion / factor;
-            uint256 currentPrice = uint256(priceFeeds.getLatestPrice(tokens[i]));
-            uint256 currentBalance = IERC20(tokens[i]).balanceOf(address(this));
-            uint256 currentValue = currentPrice * currentBalance;
-            emit AssetState(tokens[i], currentBalance, currentValue, requiredValue, assets[tokens[i]].proportion);
+            uint256 requiredValue = portfolioValue * assets[tokens[i]].proportion / PercentageMath.PERCENTAGE_FACTOR;
+            uint256 tokenPrice = uint256(priceFeeds.getLatestPrice(tokens[i]));
+            uint256 tokenBalance = IERC20(tokens[i]).balanceOf(address(this));
+            uint256 tokenDecimals = IERC20Metadata(tokens[i]).decimals();
+            uint256 tokenValue = tokenPrice * tokenBalance / (10 ** tokenDecimals);
+            emit AssetState(tokens[i], tokenBalance, tokenValue, requiredValue, assets[tokens[i]].proportion);
 
             // If the current value is equal or close to the required value, no need to rebalance the asset
             // How close the value can be to the required value is defined by the delta variable
-            //TODO the delta here is absolute and doesn't take decimals into account. FIXME
-            if (
-                currentValue == requiredValue
-                    || (currentValue < requiredValue + delta && currentValue > requiredValue - delta)
-            ) {
+            bool isCurrentValuedCloseToTarget = tokenValue >= requiredValue * (PercentageMath.PERCENTAGE_FACTOR - delta)
+                && tokenValue <= requiredValue * (PercentageMath.PERCENTAGE_FACTOR + delta);
+            if (isCurrentValuedCloseToTarget) {
                 continue;
             }
-
-            uint256 amount = 0;
-            bool isSell = true;
-
-            // Calculate the difference (amount) between the current value and the required value
-            if (currentValue > requiredValue) {
-                uint256 diff = currentValue - requiredValue;
-                amount = diff / currentPrice;
-                margin += amount * currentPrice;
-            } else if (currentValue < requiredValue) {
-                amount = (requiredValue - currentValue) / currentPrice;
-                isSell = false;
-            }
-
-            if (isSell) {
-                swapAsset(tokens[i], amount, false, currentPrice);
+            uint256 usdDifference;
+            if (tokenValue < requiredValue) {
+                // We need to buy more of this asset
+                usdDifference = requiredValue - tokenValue;
+                uint256 soldWethAmount = usdDifference * portfolioCurrencyPrecision / baseCurrencyPrice;
+                orders[i] = Order({buy: true, sell: false, amount: soldWethAmount, price: tokenPrice});
             } else {
-                // Add the asset to the buys array
-                require(buysCounter < buysLength, "The passed buys length is lower than the expected.");
-                buys[buysCounter] = BuyOrder(tokens[i], amount, currentPrice);
-                buysCounter++;
+                usdDifference = tokenValue - requiredValue;
+                // We need to sell some of this asset
+                uint256 soldAssetAmount = (usdDifference * 10 ** tokenDecimals / tokenPrice);
+                swapAsset(tokens[i], soldAssetAmount, false, tokenPrice);
             }
         }
 
-        require(buysCounter == buysLength, "The passed buys length is higher than the expected.");
-
-        if (buysCounter == 0) return;
-
-        for (uint256 i = 0; i < buysLength; i++) {
-            emit log_uint(buys[i].amount);
-            emit log_uint(margin);
-            uint256 diff = buys[i].amount * buys[i].price;
-            if (margin < diff) {
-                diff = margin;
-            } else {
-                margin -= diff;
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (!orders[i].buy) {
+                continue;
             }
-            uint256 amount = diff / buys[i].price;
-            emit log_uint(diff);
-            emit log_uint(buys[i].price);
-            swapAsset(buys[i].token, amount, true, buys[i].price);
+            uint256 amount = orders[i].amount;
+            swapAsset(tokens[i], amount, true, 10);
         }
     }
 
     /* ------------------------- PRIVATE FUNCTIONS ------------------------- */
+
+    /// @notice gets the USD price of the base currency (WETH) in the portfolio
+    /// @return the USD price of the base currency (WETH) in the portfolio with 8 decimals of precision.
+    function getBaseCurrencyPrice() private view returns (uint256) {
+        uint256 price = uint256(priceFeeds.getLatestPrice(address(WETH9)));
+        return price;
+    }
 
     /// @notice Sets the unallocated proportion of the portfolio that sits in WETH.
     function setRemainingProportion(uint256 _proportion) internal {
