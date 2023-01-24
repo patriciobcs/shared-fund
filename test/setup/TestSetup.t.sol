@@ -39,6 +39,9 @@ contract TestSetup is Test {
     address XMR;
     address USDC;
 
+    uint256 constant ERC20_PRECISION = 1e18;
+    uint256 constant PRICEFEED_PRECISION = 1e8;
+
     MockUniV3Router mockUniV3;
 
     /// @dev un-allocated proportion of the portfolio. Meaning that 1-allocatedProportion=remainingProportion

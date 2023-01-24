@@ -10,6 +10,7 @@ import "openzeppelin-contracts/access/Ownable.sol";
  */
 contract PriceFeedConsumer is Ownable {
     mapping(address => AggregatorV3Interface) internal priceFeeds;
+    uint256 constant CHAINLINK_PRECISION = 1e8;
 
     constructor(address _token, address _priceFeed) {
         priceFeeds[_token] = AggregatorV3Interface(_priceFeed);
@@ -38,7 +39,7 @@ contract PriceFeedConsumer is Ownable {
      */
     function getLatestPrice(address _token) public view priceFeedExists(_token) returns (int256) {
         (, int256 price,,,) = priceFeeds[_token].latestRoundData();
-        return price;
+        return price * int256(CHAINLINK_PRECISION);
     }
 
     /**

@@ -8,7 +8,6 @@ contract TestDeposit is TestSetup {
     ///      the share for its NFT should be equal to 100% since he's the only user in the fund.
     ///      The deposit function should wrap the ether received.
     function testDepositOneUser() public {
-        emit log_address(WETH);
         deposit(user1, 1, 1 ether);
         uint256 share = portfolio.shareOf(1);
 

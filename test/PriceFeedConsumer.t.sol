@@ -38,7 +38,7 @@ contract PriceFeedConsumerTest is Test {
     function testGetLastestPrice() public {
         addPriceFeed(WETH);
         int256 price = priceFeedConsumer.getLatestPrice(WETH);
-        assertTrue(price == INITIAL_ANSWER);
+        assertTrue(price == INITIAL_ANSWER * 1e8);
     }
 
     function testGetPriceFeed() public {
