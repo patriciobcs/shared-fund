@@ -1,0 +1,82 @@
+.coin-choose{
+  overflow-y:scroll;
+  max-height:300px;
+
+  &__table {
+    margin-left: auto;
+    margin-right: auto;
+    width: 80%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+    border-bottom: solid 1px darkgray;
+
+    th {
+      padding-top: 15px;
+      padding-bottom: 15px;
+    }
+
+    td {
+      padding-top: 25px;
+      padding-bottom: 25px;
+    }
+
+    tr {
+      border-bottom: solid 1px darkgray;
+    }
+
+    .remove {
+      cursor: pointer;
+      background: gray;
+      color: white;
+      border-radius: 50%;
+      border: none;
+    }
+
+    .select {
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    tbody, thead {
+      text-align: center;
+    }
+  }
+}
+.react-select-container{
+  width:60%;
+  margin-left:auto;
+  margin-right:auto;
+
+  .react-select{
+    &__control{
+      background:gray;
+    }
+    &__menu{
+      background:gray;
+    }
+    &__placeholder{
+      color:white;
+    }
+    &__single-value{
+      color:white;
+    }
+  }
+}
+
+
+.add-coin{
+    margin-bottom:15px;
+    margin-top:15px;
+    display: block;
+    background: none;
+    border: 2px solid white;
+    padding: 8px 0.8rem;
+    border-radius: 12px;
+    color: white;
+
+    &:hover {
+      background-color: white;
+      color: black;
+    }
+}
