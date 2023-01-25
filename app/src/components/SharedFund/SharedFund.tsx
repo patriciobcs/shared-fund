@@ -2,7 +2,7 @@ import "./SharedFund.scss"
 import "../Home/Home.scss"
 import Header from "../Header/Header";
 import React, {useEffect} from "react";
-import {Fund, getFund} from "../Simulation";
+import {Fund, getFund} from "../../Simulation";
 import FundTab from "./Tab/FundTab/FundTab";
 import InvestTab from "./Tab/InvestTab/InvestTab";
 

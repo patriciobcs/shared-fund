@@ -1,9 +1,9 @@
 import {PieChart} from "react-minimal-pie-chart";
 import Owner from "./Owner/Owner";
 import SymbolSumUp from "./SymbolSumUp/SymbolSumUp";
-import updateIcon from "../../../assets/update.png";
+import updateIcon from "../../../../assets/update.png";
 import React, {useEffect} from "react";
-import pen from "../../../assets/pen.png";
+import pen from "../../../../assets/pen.png";
 import Modal from "../../../Modal/Modal";
 import AssetSliders from "./AssetSliders/AssetSliders";
 import randomColor from "randomcolor";

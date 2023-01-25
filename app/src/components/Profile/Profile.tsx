@@ -1,4 +1,8 @@
-import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+} from 'wagmi'
 import { InjectedConnector } from 'wagmi/connectors/injected'
  
 export default function Profile() {

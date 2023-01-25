@@ -3,7 +3,7 @@ import React, {useEffect} from "react";
 import randomColor from "randomcolor";
 import "../Tab.scss";
 import "./InvestTab.scss";
-import { Owner } from "../../../Simulation";
+import { Owner } from "../../../../Simulation";
 
 function InvestTab(props){
 

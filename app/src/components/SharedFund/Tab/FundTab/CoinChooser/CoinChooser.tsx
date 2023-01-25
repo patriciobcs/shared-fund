@@ -1,7 +1,7 @@
 import "./CoinChooser.scss"
 import React, {useEffect} from "react";
 import Select from "react-select";
-import {Asset, emptyAsset} from "../../../../Simulation";
+import {Asset, emptyAsset} from "../../../../../Simulation";
 import AssetSliders from "../AssetSliders/AssetSliders";
 import Modal from "../../../../Modal/Modal";
 

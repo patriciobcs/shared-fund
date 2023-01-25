@@ -1,6 +1,6 @@
 import React from 'react';
-import Home from "./Home/Home";
-import SharedFund from "./SharedFund/SharedFund";
+import Home from "./components/Home/Home";
+import SharedFund from "./components/SharedFund/SharedFund";
 import {BrowserRouter, Routes, Route} from "react-router-dom";
 
 function App() {

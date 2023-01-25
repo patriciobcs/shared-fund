@@ -65,5 +65,12 @@ It is necessary to have installed [Foundry](https://book.getfoundry.sh/getting-s
 make # setup the project
 forge test # run the tests locally
 make anvil-fork-mainnet # start a mainnet fork
-make deploy-anvil # deploy the contract to the mainnet fork (requires .env)
+# modify the .env file to add:
+# - the private key (found the last output of previous command)
+# - the mainnet rpc url (you can get one in alchemy.com)
+make deploy-anvil # deploy the contract to the mainnet fork
+cd app && yarn && yarn start # start the app
+# change the network of your wallet to localhost:8545
+# open the app in http://localhost:3000
+# connect your wallet and start using the app
 ```

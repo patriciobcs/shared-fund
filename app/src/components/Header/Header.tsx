@@ -1,18 +1,18 @@
 import React from 'react';
 import './Header.scss';
-import whiteLogo from "./../assets/logo-white.png";
+import whiteLogo from "../../assets/logo-white.png";
 import {Link} from "react-router-dom";
 import Profile from '../Profile/Profile';
- 
 import { WagmiConfig, createClient, configureChains, mainnet } from 'wagmi'
- 
 import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { publicProvider } from 'wagmi/providers/public'
- 
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
  
+// import abi from "../../../out/Portfolio.sol/Portfolio.json";
+
+// console.log(abi);
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
 const { chains, provider, webSocketProvider } = configureChains(
