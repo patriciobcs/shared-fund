@@ -65,7 +65,7 @@ function FundTab(props){
                             })
                         }
                     </ul>
-                    <button onClick={() => setModalOwner(true)}> Invite a new owner</button>
+                    <button style={{width: "100%"}} onClick={() => setModalOwner(true)}> Invite a new owner</button>
                 </div>
             </div>
 

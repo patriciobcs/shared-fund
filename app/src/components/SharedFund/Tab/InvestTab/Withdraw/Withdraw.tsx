@@ -11,7 +11,7 @@ import deployment from "../../../../../assets/contracts/run-latest.json";
 
 const abi = contract.abi;
 const address = deployment.transactions[0].contractAddress as Address;
-
+  
 export function Deposit() {
   const [nftId, setNftId] = useState(0);
   const [amount, setAmount] = useState(0);
@@ -22,7 +22,7 @@ export function Deposit() {
   } = usePrepareContractWrite({
     address,
     abi,
-    functionName: "deposit",
+    functionName: "withdraw",
     args: [amount],
   });
   const { data, error, isError, write } = useContractWrite(config);
@@ -33,14 +33,10 @@ export function Deposit() {
 
   return (
     <div>
-      {isLoading ? "Deposit..." : "Deposit"}
-      <form onSubmit={write} >
-        <label>
-          Amount:
-          <input  disabled={!write || isLoading}  type="number" value={amount} onChange={(e) => setAmount(parseInt(e.target.value))} />
-        </label>
-        <button type="submit">Withdraw</button>
-      </form>
+      <input value={amount}></input>
+      <button disabled={!write || isLoading} onClick={() => write()}>
+        {isLoading ? "Deposit..." : "Deposit"}
+      </button>
       {isSuccess && (
         <div>
           Successfully deposited

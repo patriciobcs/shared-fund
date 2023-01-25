@@ -13,7 +13,7 @@ function InvestTab(props) {
   const [owner] = useState<Owner>(props.fund.owners[0]);
   const [roi, setRoi] = useState(0);
   const [percentage, setPercentage] = useState(0);
-  const [modalInvestment, setModalInvestment] = useState(false);
+  const [modalDeposit, setModalDeposit] = useState(false);
 
   useEffect(() => {
     const data = [];
@@ -68,15 +68,22 @@ function InvestTab(props) {
             <li> Your Investment : {owner.investment} $ </li>
             <li> ROI : {(roi * 100).toFixed(2)} % </li>
           </ul>
-          <button onClick={() => {setModalInvestment(true)}}> Invest </button>
-          <button> Withdraw </button>
-          <button> Sell Shares </button>
+          <button
+            style={{width: "100%"}}
+            onClick={() => {
+              setModalDeposit(true);
+            }}
+          >
+            Deposit
+          </button>
+          <button style={{width: "100%"}}>Withdraw</button>
+          <button style={{width: "100%"}}>Sell Shares</button>
         </div>
 
         <Modal
           title={"Amount"}
-          isOpen={modalInvestment}
-          onClose={() => setModalInvestment(false)}
+          isOpen={modalDeposit}
+          onClose={() => setModalDeposit(false)}
         >
           <Deposit />
         </Modal>
