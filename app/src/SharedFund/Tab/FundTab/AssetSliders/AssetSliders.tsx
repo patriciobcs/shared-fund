@@ -2,8 +2,8 @@ import React, {useEffect} from "react";
 import RangeSlider from 'react-range-slider-input';
 import 'react-range-slider-input/dist/style.css';
 import "./AssetSliders.scss"
-import randomColor from "randomcolor";
 import Modal from "../../../../Modal/Modal";
+import ConfirmModal from "../../../ConfirmModal/ConfirmModal";
 
 function AssetSliders(props){
 
@@ -16,17 +16,22 @@ function AssetSliders(props){
         const _proportions = {};
         props.assets.map((a) => _proportions[a.symbol] = a.proportion)
         setProportions(_proportions);
+
+        checkTotal(_proportions);
     },[props.assets])
 
+    const checkTotal = (prop) => {
+        let total = 0;
+        Object.keys(prop).map(a => total += prop[a]);
+        setDisabled(total != 100);
+    };
 
     const changeValue = (symbol,value) => {
         const _proportions = proportions;
         _proportions[symbol] = value[1];
         setProportions({..._proportions});
 
-        let total = 0;
-        Object.keys(_proportions).map(a => total += _proportions[a]);
-        setDisabled(total != 100);
+        checkTotal(_proportions);
     }
 
     return (
@@ -56,15 +61,7 @@ function AssetSliders(props){
                 null
             }
 
-            <Modal title={"Confirm the update"} isOpen={modalOpen} onClose={() => setOpen(false)}>
-                <div className="confirm">
-                    <label> Are you sure ? </label>
-                    <div>
-                        <button className="change"> Yes </button>
-                        <button className="change"> No </button>
-                    </div>
-                </div>
-            </Modal>
+            <ConfirmModal modalOpen={modalOpen} setOpen={setOpen}></ConfirmModal>
         </div>
     )
 }

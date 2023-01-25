@@ -57,3 +57,37 @@
     }
   }
 }
+
+.modal-with-input{
+  height:150px;
+
+  &__input{
+    display:flex;
+    justify-content: center;
+
+    label{
+      margin-right:15px;
+    }
+    input{
+      width:250px;
+    }
+
+    margin-bottom:50px;
+  }
+  button {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    background: none;
+    border: 2px solid white;
+    padding: 8px 0.8rem;
+    border-radius: 12px;
+    color: white;
+
+    &:hover {
+      background-color: white;
+      color: black;
+    }
+  }
+
+}

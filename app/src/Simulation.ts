@@ -1,4 +1,4 @@
-const owners: Owner[] = [
+export const owners: Owner[] = [
     {
         name: "Louis Tricot",
         investment: 5000,
@@ -16,7 +16,7 @@ const owners: Owner[] = [
     }
 ]
 
-const assets: Asset[] = [
+export let assets: Asset[] = [
     {
         symbol: "ETH",
         name: "Ethereum",
@@ -56,6 +56,14 @@ export interface Asset{
     proportion: number;
     balance: number;
 }
+
+export const emptyAsset = {   symbol: "",
+    name: "",
+    amount: 0,
+    price: 0,
+    proportion: 0,
+    balance: 0
+};
 
 export interface Fund{
     assets: Asset[];

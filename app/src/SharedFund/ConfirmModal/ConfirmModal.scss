@@ -1,0 +1,24 @@
+.confirm{
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom:25px;
+
+  label{
+    margin-bottom:25px;
+  }
+}
+
+.change{
+  background:none;
+  border-radius:12px;
+  color:white;
+  border:2px solid white;
+  padding: 8px 0.8rem;
+  font-size:1.15rem;
+
+  &:hover{
+    color:black;
+    background:white;
+  }
+}

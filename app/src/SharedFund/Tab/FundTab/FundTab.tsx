@@ -9,12 +9,17 @@ import AssetSliders from "./AssetSliders/AssetSliders";
 import randomColor from "randomcolor";
 import "../Tab.scss";
 import "./FundTab.scss";
+import CoinChooser from "./CoinChooser/CoinChooser";
+import ConfirmModal from "../../ConfirmModal/ConfirmModal";
 
 function FundTab(props){
 
-    const [modalOpen, setOpen] = React.useState(false);
+    const [modalPercentage, setModalPercentage] = React.useState(false);
+    const [modalCoin, setModalCoin] = React.useState(false);
     const [fundBalance, setFundBalance] = React.useState(0);
     const [pieData, setPieData] = React.useState([]);
+    const [rebalanceModal, setRebalanceModal] = React.useState(false);
+    const [modalOwner, setModalOwner] = React.useState(false);
 
     useEffect(() => {
         const data = [];
@@ -31,10 +36,10 @@ function FundTab(props){
         setFundBalance(balance)
     },[props.fund])
     return (
-        <div style={{ height: 1500}} className="fund-tab">
+        <div style={{paddingBottom:15}} className="fund-tab">
             <div className={"fund-tab__info"}>
                 <div className="fund-tab__info__chart">
-                    <button className="fund-tab__info__chart-update"><img onClick={() => setOpen(true)} src={pen}/></button>
+                    <button className="fund-tab__info__chart-update"><img onClick={() => setModalPercentage(true)} src={pen}/></button>
                     <PieChart
                         data={pieData}
                         label={({ dataEntry }) => dataEntry.title +" : " + dataEntry.value + "%" }
@@ -59,22 +64,41 @@ function FundTab(props){
                             })
                         }
                     </ul>
-                    <button> Invite a new owner</button>
+                    <button onClick={() => setModalOwner(true)}> Invite a new owner</button>
                 </div>
             </div>
 
             <hr/>
 
-            <h2 className="your-currencies"> Your Currencies </h2>
+            <div className="your-currencies">
+                <h2> Your Currencies </h2>
+                <button className="your-currencies__update"><img onClick={() => setModalCoin(true)} src={pen}/></button>
+            </div>
             <SymbolSumUp assets={props.fund.assets} balance={fundBalance}/>
-            <div className="rebalance">
+            <div onClick={() => setRebalanceModal(true)} className="rebalance">
                 <img src={updateIcon}/>
                 <label> Rebalance </label>
             </div>
 
-            <Modal title={"Update percentages"} isOpen={modalOpen} onClose={() => setOpen(false)}>
+            <Modal title={"Update percentages"} isOpen={modalPercentage} onClose={() => setModalPercentage(false)}>
                 <AssetSliders assets={props.fund.assets}/>
             </Modal>
+
+            <Modal title={"Update Portfolio coin"} isOpen={modalCoin} onClose={() => setModalCoin(false)}>
+                <CoinChooser assets={props.fund.assets}/>
+            </Modal>
+
+            <Modal title={"Invite a new member"} isOpen={modalOwner} onClose={() => setModalOwner(false)}>
+                <div className="modal-with-input">
+                    <div className="modal-with-input__input">
+                        <label> Address of the member : </label>
+                        <input type="text"/>
+                    </div>
+                    <button> Confirmer </button>
+                </div>
+            </Modal>
+
+            <ConfirmModal modalOpen={rebalanceModal} setOpen={setRebalanceModal}></ConfirmModal>
         </div>
     )
 }
