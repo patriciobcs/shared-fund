@@ -17,7 +17,7 @@ function SharedFund(props){
     },[]);
 
     return(
-        <div style={{backgroundColor:"#1c1c1c"}}>
+        <div>
             <Header/>
             <div className="fund-titles">
                 <h1 onClick={() => setTab("fund")} className={tab == "fund" ? "active" : null}> The Fund </h1>

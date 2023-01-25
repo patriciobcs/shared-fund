@@ -3,25 +3,25 @@ import {
   usePrepareContractWrite,
   useContractWrite,
   useWaitForTransaction,
+  Address,
 } from "wagmi";
 
-export function MintNFT() {
+import contract from "../../../../../assets/contracts/Portfolio.json";
+import deployment from "../../../../../assets/contracts/run-latest.json";
+
+const abi = contract.abi;
+const address = deployment.transactions[0].contractAddress as Address;
+  
+export function Deposit() {
   const {
     config,
     error: prepareError,
     isError: isPrepareError,
   } = usePrepareContractWrite({
-    address: "0xFBA3912Ca04dd458c843e2EE08967fC04f3579c2",
-    abi: [
-      {
-        name: "mint",
-        type: "function",
-        stateMutability: "nonpayable",
-        inputs: [],
-        outputs: [],
-      },
-    ],
-    functionName: "mint",
+    address,
+    abi,
+    functionName: "deposit",
+    args: [1],
   });
   const { data, error, isError, write } = useContractWrite(config);
 
@@ -32,18 +32,18 @@ export function MintNFT() {
   return (
     <div>
       <button disabled={!write || isLoading} onClick={() => write()}>
-        {isLoading ? "Minting..." : "Mint"}
+        {isLoading ? "Investing..." : "Invest"}
       </button>
       {isSuccess && (
         <div>
-          Successfully minted your NFT!
+          Successfully invest
           <div>
             <a href={`https://etherscan.io/tx/${data?.hash}`}>Etherscan</a>
           </div>
         </div>
       )}
       {(isPrepareError || isError) && (
-        <div>Error: {(prepareError || error)?.message}</div>
+        <div>Error: {(prepareError || error)?.message.split(";")[0]}</div>
       )}
     </div>
   );

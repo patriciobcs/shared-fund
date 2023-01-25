@@ -6,7 +6,7 @@ import {PieChart} from "react-minimal-pie-chart";
 
 function Home(props){
     return (
-        <div style={{backgroundColor:"#1c1c1c"}}>
+        <div>
             <Header/>
             <div className="home">
                 <div className="home__title">

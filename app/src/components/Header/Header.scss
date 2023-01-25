@@ -7,8 +7,6 @@
   top:0;
   height:50px;
   opacity:95%;
-  background-color:#1c1c1c;
-  color: gray;
 
   &__logo {
     width:50px;
@@ -18,7 +16,6 @@
   &__nav {
     display: flex;
     align-items: center;
-    width:30%;
     justify-content: space-between;
     font-size:1rem;
     
@@ -34,26 +31,5 @@
         color:white;
       }
     }
-
-    button {
-      margin-left:auto;
-      margin-right:auto;
-      display:block;
-      font-size:1rem;
-      background: none;
-      border: 2px solid white;
-      padding: 4px 0.8rem;
-      border-radius:12px;
-      color: white;
-
-      &:hover{
-        background-color:white;
-        color:black;
-      }
-    }
   }
-}
-
-.header__create-fund-button {
-  /* Your styles here */
 }

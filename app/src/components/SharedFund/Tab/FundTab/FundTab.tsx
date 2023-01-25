@@ -2,7 +2,7 @@ import {PieChart} from "react-minimal-pie-chart";
 import Owner from "./Owner/Owner";
 import SymbolSumUp from "./SymbolSumUp/SymbolSumUp";
 import updateIcon from "../../../../assets/update.png";
-import React, {useEffect} from "react";
+import { useEffect, useState } from "react";
 import pen from "../../../../assets/pen.png";
 import Modal from "../../../Modal/Modal";
 import AssetSliders from "./AssetSliders/AssetSliders";
@@ -11,15 +11,16 @@ import "../Tab.scss";
 import "./FundTab.scss";
 import CoinChooser from "./CoinChooser/CoinChooser";
 import ConfirmModal from "../../ConfirmModal/ConfirmModal";
+import { Deposit } from "../InvestTab/Deposit/Deposit";
 
 function FundTab(props){
 
-    const [modalPercentage, setModalPercentage] = React.useState(false);
-    const [modalCoin, setModalCoin] = React.useState(false);
-    const [fundBalance, setFundBalance] = React.useState(0);
-    const [pieData, setPieData] = React.useState([]);
-    const [rebalanceModal, setRebalanceModal] = React.useState(false);
-    const [modalOwner, setModalOwner] = React.useState(false);
+    const [modalPercentage, setModalPercentage] = useState(false);
+    const [modalCoin, setModalCoin] = useState(false);
+    const [fundBalance, setFundBalance] = useState(0);
+    const [pieData, setPieData] = useState([]);
+    const [rebalanceModal, setRebalanceModal] = useState(false);
+    const [modalOwner, setModalOwner] = useState(false);
 
     useEffect(() => {
         const data = [];
@@ -39,7 +40,7 @@ function FundTab(props){
         <div style={{paddingBottom:15}} className="fund-tab">
             <div className={"fund-tab__info"}>
                 <div className="fund-tab__info__chart">
-                    <button className="fund-tab__info__chart-update"><img onClick={() => setModalPercentage(true)} src={pen}/></button>
+                    <button className="fund-tab__info__chart-update"><img onClick={() => setModalPercentage(true)} src={pen} alt="update"/></button>
                     <PieChart
                         data={pieData}
                         label={({ dataEntry }) => dataEntry.title +" : " + dataEntry.value + "%" }
@@ -60,7 +61,7 @@ function FundTab(props){
                     <ul>
                         {
                             props.fund.owners.map((owner) => {
-                                return <li><Owner key={owner.name} name={owner.name} percentage={(owner.investment/props.fund.initialInvestment)*100}/></li>
+                                return <li key={owner.name}><Owner name={owner.name} percentage={(owner.investment/props.fund.initialInvestment)*100}/></li>
                             })
                         }
                     </ul>
@@ -72,11 +73,11 @@ function FundTab(props){
 
             <div className="your-currencies">
                 <h2> Your Currencies </h2>
-                <button className="your-currencies__update"><img onClick={() => setModalCoin(true)} src={pen}/></button>
+                <button className="your-currencies__update"><img onClick={() => setModalCoin(true)} src={pen} alt="update"/></button>
             </div>
             <SymbolSumUp assets={props.fund.assets} balance={fundBalance}/>
             <div onClick={() => setRebalanceModal(true)} className="rebalance">
-                <img src={updateIcon}/>
+                <img src={updateIcon} alt="update"/>
                 <label> Rebalance </label>
             </div>
 
