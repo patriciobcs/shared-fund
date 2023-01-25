@@ -30,7 +30,8 @@ contract MockV3Aggregator {
         latestAnswer = _answer;
         latestTimestamp = block.timestamp;
         latestRound++;
-        getAnswer[latestRound] = _answer;
+        // Chainlink price feeds return ERC20/USD prices with 8 decimals
+        getAnswer[latestRound] = _answer * 1e8;
         getTimestamp[latestRound] = block.timestamp;
         getStartedAt[latestRound] = block.timestamp;
     }

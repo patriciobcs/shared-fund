@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "../src/PriceFeedConsumer.sol";
-import "./mocks/MockV3Aggregator.sol";
+import "../../src/PriceFeedConsumer.sol";
+import "../mocks/MockV3Aggregator.sol";
 import "forge-std/Test.sol";
 
 contract PriceFeedConsumerTest is Test {
@@ -37,8 +37,8 @@ contract PriceFeedConsumerTest is Test {
 
     function testGetLastestPrice() public {
         addPriceFeed(WETH);
-        int256 price = priceFeedConsumer.getLatestPrice(WETH);
-        assertTrue(price == INITIAL_ANSWER * 1e8);
+        uint256 price = priceFeedConsumer.getLatestPrice(WETH);
+        assertTrue(price == uint256(INITIAL_ANSWER * 1e8));
     }
 
     function testGetPriceFeed() public {

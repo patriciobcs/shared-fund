@@ -2,7 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "forge-std/Test.sol";
-import "src/SharedFund.sol";
+import "../../src/SharedFund.sol";
 
 contract TestInvites is Test {
     SharedFund sharedFund;

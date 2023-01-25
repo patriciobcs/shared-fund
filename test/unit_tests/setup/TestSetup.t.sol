@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "../../src/Portfolio.sol";
-import "../mocks/MockV3Aggregator.sol";
+import "../../../src/Portfolio.sol";
+import "../../mocks/MockV3Aggregator.sol";
 import "forge-std/Test.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
-import "../mocks/MockUniV3Router.sol";
-import "../mocks/MockWETH.sol";
-import "../mocks/MockERC20.sol";
+import "../../mocks/MockUniV3Router.sol";
+import "../../mocks/MockWETH.sol";
+import "../../mocks/MockERC20.sol";
 
 contract TestSetup is Test {
     uint256 initialBalance = 0;

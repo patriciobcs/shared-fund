@@ -5,8 +5,8 @@ import "./PriceFeedConsumer.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
 import "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./SharedFund.sol";
-import "uniswap-v3-periphery/libraries/TransferHelper.sol";
-import "uniswap-v3-periphery/interfaces/ISwapRouter.sol";
+import "uniswap-v3-periphery/contracts/libraries/TransferHelper.sol";
+import "uniswap-v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "aave-v3-core/contracts/protocol/libraries/math/PercentageMath.sol";
 import "./interfaces/external/IWETH9.sol";
 
@@ -52,6 +52,8 @@ contract Portfolio is Ownable, SharedFund {
 
     /// @dev The Uniswap V3 pool fee.
     uint24 public constant poolFee = 3000;
+
+    uint8 constant CHAINLINK_USD_DECIMALS = 8;
 
     /// @dev A buy order consists of a token address and an amount to buy.
     struct Order {
@@ -215,8 +217,6 @@ contract Portfolio is Ownable, SharedFund {
     function deposit(uint256 _nftId) external payable onlyTokenOwner(_nftId) {
         uint256 previousValue = getPortfolioValue();
 
-        // register the deposited ETH in the balances
-        uint256 depositedAmount = msg.value;
         // Since UNIv3 is in WETH, we need to convert ETH to WETH
         WETH9.deposit{value: msg.value}();
 
