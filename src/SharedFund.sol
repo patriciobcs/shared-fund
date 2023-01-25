@@ -10,10 +10,9 @@ contract SharedFund is ERC721 {
     Counters.Counter private tokenIds;
 
     // Mapping from token ID to share owned.
-    // expressed in wad which are decimal number with 18 decimals of precision
-    // 1 wad = 1e18 = 1%
-    // 100 wad = 1e20 = 100%
     mapping(uint256 => uint256) public shares;
+
+    mapping(address => uint256) public owners;
 
     constructor() ERC721("SharedFund", "SHAFU") {}
 
@@ -34,7 +33,19 @@ contract SharedFund is ERC721 {
         uint256 newItemId = tokenIds.current();
         _safeMint(recipient, newItemId);
         shares[newItemId] = 0;
+        owners[recipient] = newItemId;
         return newItemId;
+    }
+
+    /**
+     * @dev See {IERC721-transferFrom}.
+     */
+    function transferFrom(address from, address to, uint256 tokenId) public virtual override {
+        //solhint-disable-next-line max-line-length
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
+
+        _transfer(from, to, tokenId);
+        owners[to] = tokenId;
     }
 
     /**
@@ -44,6 +55,10 @@ contract SharedFund is ERC721 {
      */
     function shareOf(uint256 tokenId) public view returns (uint256) {
         return shares[tokenId];
+    }
+
+    function tokenIdOf(address owner) public view returns (uint256) {
+        return owners[owner];
     }
 
     function totalSupply() public view returns (uint256) {
