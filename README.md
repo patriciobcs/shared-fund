@@ -59,10 +59,10 @@ withdraw()
 
 ## Quickstart
 
-Use the following commands to setup, test and deploy the project:
+It is necessary to have installed [Foundry](https://book.getfoundry.sh/getting-started/installation) to be able to build, test and deploy the project. After setting up foundry, use the following commands to setup, test and deploy the project:
 
 ```sh
 make # setup the project
-make test # run the tests locally
+forge test # run the tests locally
 make deploy network=goerli # deploy the contract to goerli (requires .env)
 ```

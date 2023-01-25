@@ -1,35 +1,15 @@
 -include .env
 
-.PHONY: all test clean deploy-anvil remappings
+.PHONY: all install slither format lint anvil deploy deploy-goerli deploy-anvil
 
-all: clean remove install build remappings
+all: install
 
-# Clean the repo
-clean  :; forge clean
-
-remappings :; forge remappings > remappings.txt
-
-# Remove modules
-remove :; rm -rf .gitmodules && rm -rf .git/modules/* && rm -rf lib && touch .gitmodules && git add . && git commit -m "modules" -n
-
-install :; forge install smartcontractkit/chainlink-brownie-contracts --no-commit && forge install foundry-rs/forge-std --no-commit && \
-forge install openzeppelin/openzeppelin-contracts --no-commit && forge install aave/aave-v3-core --no-commit \
-&& forge install https://github.com/Uniswap/v3-core --no-commit && forge install https://github.com/Uniswap/v3-periphery --no-commit
-
-# Update Dependencies
-update:; forge update
-
-build:; forge build
-
-test :; forge test 
-
-snapshot :; forge snapshot
+install :; forge install 
 
 slither :; slither ./src 
 
-format :; prettier --write src/**/*.sol && prettier --write src/*.sol
+format :; forge fmt
 
-# solhint should be installed globally
 lint :; solhint src/**/*.sol && solhint src/*.sol
 
 anvil :; anvil -m 'test test test test test test test test test test test junk'
