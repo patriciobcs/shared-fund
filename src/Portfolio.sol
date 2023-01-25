@@ -185,6 +185,12 @@ contract Portfolio is Ownable, SharedFund {
         return portfolioValue;
     }
 
+    /// @notice Returns all the tokens in the portfolio.
+    /// @return An array of all the tokens in the portfolio.
+    function getTokens() public view returns (address[] memory) {
+        return tokens;
+    }
+
     /// @notice Returns the USD value of the fund for a specific asset.
     /// @dev The value is calculated by multiplying the ERC20.balanceOf(this) by the priceFeed.
     /// @param _token The address of the token to get the fund value of.
@@ -206,6 +212,30 @@ contract Portfolio is Ownable, SharedFund {
     /// @notice Returns the unallocated proportion of the portfolio that sits in WETH.
     function getRemainingProportion() public view returns (uint256) {
         return getAssetProportion(address(WETH9));
+    }
+
+    /// @notice Returns the share of the portfolio for a specific NFT.
+    /// @dev The share is calculated by dividing the NFT value by the total value of the portfolio.
+    /// @param _nftId The ID of the NFT to get the share of.
+    /// @return The share of the portfolio for the NFT with 4 decimals of precision.
+    /// @return The owner of the NFT.
+    function getNFTShare(uint256 _nftId) public view returns (uint256, address) {
+        uint256 nftShare = shareOf(_nftId);
+        address owner = ownerOf(_nftId);
+        return (nftShare, owner);
+    }
+
+    /// @notice Returns the value of the portfolio for a specific NFT.
+    /// @dev The value is calculated by multiplying the NFT share by the total value of the portfolio.
+    /// @param _nftId The ID of the NFT to get the value of.
+    /// @return The value of the portfolio for the NFT with 8 decimals of precision.
+    /// @return The owner of the NFT.
+    function getNFTValue(uint256 _nftId) public view returns (uint256, address) {
+        uint256 nftShare = shareOf(_nftId);
+        address owner = ownerOf(_nftId);
+        uint256 portfolioValue = getPortfolioValue();
+        uint256 nftValue = (nftShare * portfolioValue) / PercentageMath.PERCENTAGE_FACTOR;
+        return (nftValue, owner);
     }
 
     /* -------------------------- USERS FUNCTIONS -------------------------- */

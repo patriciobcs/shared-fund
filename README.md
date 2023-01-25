@@ -64,5 +64,6 @@ It is necessary to have installed [Foundry](https://book.getfoundry.sh/getting-s
 ```sh
 make # setup the project
 forge test # run the tests locally
-make deploy network=goerli # deploy the contract to goerli (requires .env)
+make anvil-fork-mainnet # start a mainnet fork
+make deploy-anvil # deploy the contract to the mainnet fork (requires .env)
 ```
