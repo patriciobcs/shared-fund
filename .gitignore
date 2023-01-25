@@ -4,5 +4,5 @@ out
 .env
 broadcast
 shared-fund.iml
-.env
+**/.env
 **/node_modules
