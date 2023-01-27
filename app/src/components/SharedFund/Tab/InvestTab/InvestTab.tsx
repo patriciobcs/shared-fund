@@ -27,7 +27,7 @@ function InvestTab(props) {
 
     props.fund.assets.map((a) => {
       data.push({
-        title: a.coin.name,
+        title: a.coin.symbol,
         value: a.balance * percentage,
         color: randomColor(),
       });
@@ -45,7 +45,7 @@ function InvestTab(props) {
           <PieChart
             data={pieData}
             label={({ dataEntry }) =>
-              dataEntry.title + " : " + dataEntry.value + "$"
+              dataEntry.title + " $" + dataEntry.value + ""
             }
             labelStyle={(index) => ({
               fontSize: "0.20rem",
@@ -56,7 +56,7 @@ function InvestTab(props) {
             labelPosition={60}
             lineWidth={20}
           />
-          <h2> Your Balance: {fundBalance * percentage} USD </h2>
+          <h2> Your Balance: ${fundBalance * percentage} USD </h2>
         </div>
 
         <div className="fund-tab__side-tab">
