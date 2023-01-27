@@ -1,22 +1,12 @@
 import "./CoinChooser.scss"
 import React, {useEffect} from "react";
 import Select from "react-select";
-import {Asset, emptyAsset} from "../../../../../Simulation";
+import { Asset, coins, emptyAsset } from "../../../../../Simulation";
 import AssetSliders from "../AssetSliders/AssetSliders";
 import Modal from "../../../../Modal/Modal";
 
-export const allCoins = [
-    { value: 'eth', label: 'Ethereum', address:"test" },
-    { value: 'btc', label: 'Bitcoin' , address:"test2"},
-    { value: 'uni', label: 'Uniswap', address: "test3" },
-    { value: 'link', label: 'ChainLink', address: "test4" },
-    { value: 'dot', label: 'Polkadot', address: "test5" },
-    { value: 'avax', label: 'Avax', address: "test6" },
-];
-
-
 function CoinChooser(props){
-
+    const allCoins = Object.values(coins);
     const [fundCoins, setFundCoins] = React.useState<Asset[]>([emptyAsset]);
     const [fundCoinNames, setNames] = React.useState([]);
     const [filteredCoinList, setFiltered] = React.useState(allCoins);
@@ -27,8 +17,8 @@ function CoinChooser(props){
         const _names = fundCoinNames;
 
         _names[index] = event.label;
-        _coins[index].symbol = event.value;
-        _coins[index].name = event.label;
+        _coins[index].coin.symbol = event.value;
+        _coins[index].coin.label = event.label;
 
 
         setNames([..._names]);
@@ -50,16 +40,16 @@ function CoinChooser(props){
                 return !(fundCoinNames.includes(c.label));
         });
         setFiltered([..._f]);
-    },[fundCoins, fundCoinNames]);
+    }, [fundCoins, fundCoinNames]);
 
     const removeCoin = (index) => {
         let _coins = fundCoins;
         let _names = fundCoinNames;
         _names = _names.filter((e,i) => {
-            return i != index;
+            return i !== index;
         })
         _coins = _coins.filter((e,i) => {
-            return i != index;
+            return i !== index;
         })
         setFundCoins([..._coins]);
         setNames([..._names]);
@@ -70,7 +60,7 @@ function CoinChooser(props){
         const _names = [];
         props.assets.map((a) => {
             _coins.push(a)
-            _names.push(a.name);
+            _names.push(a.coin.label);
         });
         setNames(_names);
         setFundCoins(_coins);
@@ -88,14 +78,14 @@ function CoinChooser(props){
                     </tr>
                     </thead>
                     <tbody>
-                    {fundCoins.map((coin, index) => {
+                    {fundCoins.map((asset, index) => {
                         return (
-                            <tr key={coin.symbol+index}>
+                            <tr key={asset.coin.symbol+index}>
                                 <td>{index+1}</td>
                                 <td>
                                     <Select
                                         onChange={(event) => selectChange(event,index)}
-                                        value={{label:fundCoins[index].name}}
+                                        value={{label:fundCoins[index].coin.label}}
                                         {...props}
                                         maxMenuHeight={100}
                                         className="react-select-container"

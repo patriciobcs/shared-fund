@@ -27,7 +27,7 @@ function InvestTab(props) {
 
     props.fund.assets.map((a) => {
       data.push({
-        title: a.name,
+        title: a.coin.name,
         value: a.balance * percentage,
         color: randomColor(),
       });

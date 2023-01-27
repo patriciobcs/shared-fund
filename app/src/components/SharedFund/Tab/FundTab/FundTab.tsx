@@ -26,7 +26,7 @@ function FundTab(props){
         props.fund.assets.map(a => {
             balance+= a.balance
             data.push({
-                title: a.name,
+                title: a.coin.symbol,
                 value: a.proportion,
                 color: randomColor(),
             });
@@ -41,7 +41,7 @@ function FundTab(props){
                     <button className="fund-tab__info__chart-update"><img onClick={() => setModalPercentage(true)} src={pen} alt="update"/></button>
                     <PieChart
                         data={pieData}
-                        label={({ dataEntry }) => dataEntry.title +" : " + dataEntry.value + "%" }
+                        label={({ dataEntry }) => dataEntry.title +" " + dataEntry.value + "%" }
                         labelStyle={(index) => ({
                             fontSize:'0.20rem',
                             fill:"white",

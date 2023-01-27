@@ -22,7 +22,7 @@ function SymbolSumUp(props){
                 return (
                     <tr key={index}>
                         <td>{index+1}</td>
-                        <td>{asset.name} <label className="sumup__symbol">{asset.symbol}</label></td>
+                        <td>{asset.coin.label} <label className="sumup__symbol">{asset.coin.symbol}</label></td>
                         <td>{asset.price} $</td>
                         <td>{asset.amount}</td>
                         <td>{asset.balance} $</td>

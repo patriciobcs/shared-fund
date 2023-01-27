@@ -25,12 +25,10 @@ contract TestForkSetup is Test {
     address user1 = address(0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF);
     address user2 = address(0x8cedE0C4fA841021E2771ebC6A4c308be26919Fa);
     address user3 = address(0x4960E61111Ce831BCd39b160F94c6921A71E6F58);
-
     address swapRouter = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-
+    
     address WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address ethUsdPriceFeed = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
-
     address WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     address btcUsdPriceFeed = 0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c;
     address LINK = 0x514910771AF9Ca656af840dff83E8264EcF986CA;

@@ -5,6 +5,7 @@ import {
 } from "wagmi";
 import { useDebounce } from "use-debounce";
 import { address, abi } from "../../../App";
+import { ethers } from "ethers";
 
 export function Transaction({ functionName }) {
   const [nftId, ] = useDebounce('1', 500);
@@ -31,6 +32,10 @@ export function Transaction({ functionName }) {
     abi,
     functionName,
     args,
+    enabled: Boolean(amount),
+    overrides: {
+      value: ethers.utils.parseEther('1'),
+    },
   });
   const { data, error, isError, write } = useContractWrite(config);
   const { isLoading, isSuccess } = useWaitForTransaction({ hash: data?.hash });

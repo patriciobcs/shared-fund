@@ -11,7 +11,7 @@ function AssetSliders(props) {
 
   useEffect(() => {
     const _proportions = {};
-    props.assets.map((a) => (_proportions[a.symbol] = a.proportion));
+    props.assets.map((a) => (_proportions[a.coin.symbol] = a.proportion));
     setProportions(_proportions);
 
     checkTotal(_proportions);
@@ -35,18 +35,18 @@ function AssetSliders(props) {
     <div className="assets-sliders">
       {props.assets.map((a) => {
         return (
-          <div className="asset-slider" key={a.symbol}>
-            <label> {a.name} : </label>
+          <div className="asset-slider" key={a.coin.symbol}>
+            <label> {a.coin.label} : </label>
             <div className="slider-and-proportion">
               <RangeSlider
-                onInput={(value) => changeValue(a.symbol, value)}
+                onInput={(value) => changeValue(a.coin.symbol, value)}
                 className="single-thumb slider"
                 defaultValue={[0, a.proportion]}
                 thumbsDisabled={[true, false]}
                 rangeSlideDisabled={true}
                 step={1}
               />
-              <label> {proportions[a.symbol]} % </label>
+              <label> {proportions[a.coin.symbol]} % </label>
             </div>
           </div>
         );
