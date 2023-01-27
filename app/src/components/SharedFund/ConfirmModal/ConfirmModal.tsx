@@ -8,9 +8,9 @@ function ConfirmModal(props){
             <Modal title={"Confirm"} isOpen={props.modalOpen} onClose={() => props.setOpen(false)}>
                 <div className="confirm">
                     <label> Are you sure ? </label>
-                    <div>
-                        <button className="change" onClick={() =>  props.confirm}> Yes </button>
-                        <button className="change" onClick={() => props.setOpen(false)}> No </button>
+                    <div className="horizontal-list">
+                        <button className="main-button" onClick={() =>  props.confirm}> Yes </button>
+                        <button className="main-button" onClick={() => props.setOpen(false)}> No </button>
                     </div>
                 </div>
             </Modal>

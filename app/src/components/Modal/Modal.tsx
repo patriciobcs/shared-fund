@@ -6,10 +6,11 @@ const Modal = ({ title, isOpen, onClose, children }) => {
             <div className="modal-overlay">
                 <div className="modal-content">
                     <div className="modal-title">
-                        <h2> {title} </h2>
-                        <button className="modal-button" onClick={onClose}>X</button>
+                        <h4> {title} </h4>
+                        <div className="modal-close-button" onClick={onClose}>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 13L13 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M1 0.999999L13 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+                        </div>
                     </div>
-                    <hr className="modal-hr"/>
                     {children}
                 </div>
             </div>

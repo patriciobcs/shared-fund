@@ -54,7 +54,7 @@ function AssetSliders(props){
                         </div>
                 })
             }
-            <button className="change" onClick={() => setOpen(true)} disabled={disabled}> Change Proportions </button>
+            <button className="main-button" onClick={() => setOpen(true)} disabled={disabled}> Change Proportions </button>
             { disabled ?
                 <label className="warning"> The total should be 100% </label>
                 :

@@ -109,9 +109,9 @@ function CoinChooser(props){
                     </tbody>
                 </table>
             </div>
-            <div style={{display:"flex", justifyContent:"center"}}>
-                <button className="add-coin" onClick={addCoin}> Add Coin </button>
-                <button className="add-coin" onClick={()=> setModalPercentage(true)}> Confirm </button>
+            <div className="horizontal-list">
+                <button className="main-button" onClick={addCoin}> Add Coin </button>
+                <button className="main-button" onClick={()=> setModalPercentage(true)}> Confirm </button>
             </div>
 
             <Modal title={"Update percentages"} isOpen={modalPercentage} onClose={() => setModalPercentage(false)}>

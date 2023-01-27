@@ -27,3 +27,21 @@
   }
 
 }
+
+.modal-with-input{
+  height:150px;
+
+  label {
+    margin-right:15px;
+  }
+
+  input{
+    display:flex;
+    justify-content: center;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    padding: 0 10px;
+    border: none;
+    height: 40px;
+  }
+}

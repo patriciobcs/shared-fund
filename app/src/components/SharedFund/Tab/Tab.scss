@@ -20,22 +20,3 @@
     border-left: 1px solid gray;
   }
 }
-
-.modal-with-input{
-  height:150px;
-
-  &__input{
-    display:flex;
-    justify-content: center;
-
-    label {
-      margin-right:15px;
-    }
-
-    input {
-      width:100%;
-    }
-
-    margin-bottom:50px;
-  }
-}

@@ -1,14 +1,13 @@
 .coin-choose{
   overflow-y:scroll;
-  max-height:300px;
+  max-height: 400px;
+  padding-bottom: 1rem;
 
   &__table {
     margin-left: auto;
     margin-right: auto;
-    width: 80%;
+    width: 100%;
     border-collapse: collapse;
-    margin-bottom: 25px;
-    border-bottom: solid 1px darkgray;
 
     th {
       padding-top: 15px;
@@ -21,7 +20,7 @@
     }
 
     tr {
-      border-bottom: solid 1px darkgray;
+      border-top: solid 1px darkgray;
     }
 
     .remove {

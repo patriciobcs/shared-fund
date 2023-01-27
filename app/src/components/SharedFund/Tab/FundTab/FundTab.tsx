@@ -1,7 +1,6 @@
 import {PieChart} from "react-minimal-pie-chart";
 import Owner from "./Owner/Owner";
 import SymbolSumUp from "./SymbolSumUp/SymbolSumUp";
-import updateIcon from "../../../../assets/update.png";
 import { useEffect, useState } from "react";
 import pen from "../../../../assets/pen.png";
 import Modal from "../../../Modal/Modal";
@@ -11,7 +10,6 @@ import "../Tab.scss";
 import "./FundTab.scss";
 import CoinChooser from "./CoinChooser/CoinChooser";
 import ConfirmModal from "../../ConfirmModal/ConfirmModal";
-import { Deposit } from "../InvestTab/Deposit/Deposit";
 
 function FundTab(props){
 
@@ -57,14 +55,14 @@ function FundTab(props){
                 </div>
 
                 <div className = "fund-tab__side-tab vertical-list">
-                    <h1>Owners</h1>
+                    <h1>Member</h1>
                     {
                         props.fund.owners.map((owner) => {
                             return <Owner name={owner.name} percentage={(owner.investment/props.fund.initialInvestment)*100}/>
                         })
                     }
                     <div className="vertical-list" style={{paddingTop: "3rem"}}>
-                        <button className="main-button" onClick={() => setModalOwner(true)}>Invite a new owner</button>
+                        <button className="main-button" onClick={() => setModalOwner(true)}>Invite New Member</button>
                         <button className="main-button" onClick={() => setRebalanceModal(true)}>Rebalance</button>
                     </div>
                 </div>
@@ -72,9 +70,7 @@ function FundTab(props){
 
             <div className="your-currencies">
                 <h1>Your Currencies</h1>
-                <div>
-                    <button className="your-currencies__update"><img onClick={() => setModalCoin(true)} src={pen} alt="update"/></button>
-                </div>
+                <button className="your-currencies__update"><img onClick={() => setModalCoin(true)} src={pen} alt="update"/></button>
             </div>
             <SymbolSumUp assets={props.fund.assets} balance={fundBalance}/>
 
@@ -86,13 +82,13 @@ function FundTab(props){
                 <CoinChooser assets={props.fund.assets}/>
             </Modal>
 
-            <Modal title={"Invite a new member"} isOpen={modalOwner} onClose={() => setModalOwner(false)}>
+            <Modal title={"Invite New Member"} isOpen={modalOwner} onClose={() => setModalOwner(false)}>
                 <div className="modal-with-input">
-                    <div className="modal-with-input__input">
-                        <label> Address of the member : </label>
+                    <div className="vertical-list">
+                        <label>Member Address</label>
                         <input type="text"/>
                     </div>
-                    <button> Confirmer </button>
+                    <button className="main-button"> Confirm </button>
                 </div>
             </Modal>
 
