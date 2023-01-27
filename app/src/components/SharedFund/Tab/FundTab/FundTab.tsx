@@ -9,7 +9,7 @@ import randomColor from "randomcolor";
 import "../Tab.scss";
 import "./FundTab.scss";
 import CoinChooser from "./CoinChooser/CoinChooser";
-import ConfirmModal from "../../ConfirmModal/ConfirmModal";
+import ConfirmModal from "../../../Modal/ConfirmModal/ConfirmModal";
 
 function FundTab(props){
 
@@ -55,7 +55,7 @@ function FundTab(props){
                 </div>
 
                 <div className = "fund-tab__side-tab vertical-list">
-                    <h1>Member</h1>
+                    <h1>Members</h1>
                     {
                         props.fund.owners.map((owner) => {
                             return <Owner name={owner.name} percentage={(owner.investment/props.fund.initialInvestment)*100}/>

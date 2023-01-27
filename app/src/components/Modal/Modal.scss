@@ -41,6 +41,28 @@
   }
 }
 
+.warning {
+  color:red;
+  padding-top:15px;
+}  
+
+.info {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  flex-direction: column;
+}
+
+input{
+  display:flex;
+  justify-content: center;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  padding: 0 10px;
+  border: none;
+  height: 40px;
+}
+
 // animation of opacity 
 @keyframes fadeIn {
   0% {

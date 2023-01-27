@@ -2,15 +2,17 @@ import React from 'react';
 import Home from "./components/Home/Home";
 import SharedFund from "./components/SharedFund/SharedFund";
 import {BrowserRouter, Routes, Route} from "react-router-dom";
-import { WagmiConfig, createClient } from 'wagmi';
+import { WagmiConfig, createClient, Address } from 'wagmi';
 import { localhost } from 'wagmi/chains';
 import { ConnectKitProvider, getDefaultClient } from 'connectkit';
+import contract from "./assets/contracts/Portfolio.json";
+import deployment from "./assets/contracts/run-latest.json";
+export const abi = contract.abi;
+export const address = deployment.transactions[0].contractAddress as Address;
 
 const client = createClient(
   getDefaultClient({
-    appName: 'My App Name',
-    //infuraId: process.env.REACT_APP_INFURA_ID,
-    //alchemyId:  process.env.REACT_APP_ALCHEMY_ID,
+    appName: 'Shared Fund',
     chains: [localhost],
   })
 );

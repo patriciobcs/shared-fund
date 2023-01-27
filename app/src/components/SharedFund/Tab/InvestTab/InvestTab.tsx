@@ -5,7 +5,7 @@ import "../Tab.scss";
 import "./InvestTab.scss";
 import { Owner } from "../../../../Simulation";
 import Modal from "../../../Modal/Modal";
-import { Deposit } from "./Deposit/Deposit";
+import { Transaction } from "../../../Modal/Transaction/Transaction";
 
 function InvestTab(props) {
   const [fundBalance, setFundBalance] = useState(0);
@@ -14,6 +14,7 @@ function InvestTab(props) {
   const [roi, setRoi] = useState(0);
   const [percentage, setPercentage] = useState(0);
   const [modalDeposit, setModalDeposit] = useState(false);
+  const [modalWithdraw, setModalWithdraw] = useState(false);
 
   useEffect(() => {
     const data = [];
@@ -65,26 +66,41 @@ function InvestTab(props) {
             <label>Your Investment: ${owner.investment}</label>
             <label>ROI: {(roi * 100).toFixed(2)}% </label>
           </div>
-          <div className="vertical-list" style={{paddingTop: "3rem"}}>
+          <div className="vertical-list" style={{ paddingTop: "3rem" }}>
             <button
-              className="main-button" 
+              className="main-button"
               onClick={() => {
                 setModalDeposit(true);
               }}
             >
               Deposit
             </button>
-            <button className="main-button">Withdraw</button>
+            <button
+              className="main-button"
+              onClick={() => {
+                setModalWithdraw(true);
+              }}
+            >
+              Withdraw
+            </button>
             <button className="main-button">Sell Shares</button>
           </div>
         </div>
 
         <Modal
-          title={"Amount"}
+          title={"Deposit"}
           isOpen={modalDeposit}
           onClose={() => setModalDeposit(false)}
         >
-          <Deposit />
+          <Transaction functionName={"deposit"} />
+        </Modal>
+
+        <Modal
+          title={"Withdraw"}
+          isOpen={modalWithdraw}
+          onClose={() => setModalWithdraw(false)}
+        >
+          <Transaction functionName={"withdraw"} />
         </Modal>
       </div>
     </div>
