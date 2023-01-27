@@ -55,29 +55,28 @@ function InvestTab(props) {
             labelPosition={60}
             lineWidth={20}
           />
-          <h2> Your balance : {fundBalance * percentage} $ </h2>
+          <h2> Your Balance: {fundBalance * percentage} USD </h2>
         </div>
 
         <div className="fund-tab__side-tab">
-          <h2> Statistics </h2>
-          <ul>
-            <li>
-              {" "}
-              Percentage of the fund : {(percentage * 100).toFixed(2)} %{" "}
-            </li>
-            <li> Your Investment : {owner.investment} $ </li>
-            <li> ROI : {(roi * 100).toFixed(2)} % </li>
-          </ul>
-          <button
-            style={{width: "100%"}}
-            onClick={() => {
-              setModalDeposit(true);
-            }}
-          >
-            Deposit
-          </button>
-          <button style={{width: "100%"}}>Withdraw</button>
-          <button style={{width: "100%"}}>Sell Shares</button>
+          <h1> Statistics </h1>
+          <div className="vertical-list">
+            <label>Fund Percentage: {(percentage * 100).toFixed(0)}%</label>
+            <label>Your Investment: ${owner.investment}</label>
+            <label>ROI: {(roi * 100).toFixed(2)}% </label>
+          </div>
+          <div className="vertical-list" style={{paddingTop: "3rem"}}>
+            <button
+              className="main-button" 
+              onClick={() => {
+                setModalDeposit(true);
+              }}
+            >
+              Deposit
+            </button>
+            <button className="main-button">Withdraw</button>
+            <button className="main-button">Sell Shares</button>
+          </div>
         </div>
 
         <Modal

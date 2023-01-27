@@ -53,33 +53,30 @@ function FundTab(props){
                         labelPosition={60}
                         lineWidth={20}
                     />
-                    <h2> Fund Balance : {fundBalance} $ </h2>
+                    <h2> Fund Balance: {fundBalance} USD </h2>
                 </div>
 
-                <div className = "fund-tab__side-tab">
-                    <h2> Owners </h2>
-                    <ul>
-                        {
-                            props.fund.owners.map((owner) => {
-                                return <li key={owner.name}><Owner name={owner.name} percentage={(owner.investment/props.fund.initialInvestment)*100}/></li>
-                            })
-                        }
-                    </ul>
-                    <button style={{width: "100%"}} onClick={() => setModalOwner(true)}> Invite a new owner</button>
+                <div className = "fund-tab__side-tab vertical-list">
+                    <h1>Owners</h1>
+                    {
+                        props.fund.owners.map((owner) => {
+                            return <Owner name={owner.name} percentage={(owner.investment/props.fund.initialInvestment)*100}/>
+                        })
+                    }
+                    <div className="vertical-list" style={{paddingTop: "3rem"}}>
+                        <button className="main-button" onClick={() => setModalOwner(true)}>Invite a new owner</button>
+                        <button className="main-button" onClick={() => setRebalanceModal(true)}>Rebalance</button>
+                    </div>
                 </div>
             </div>
-
-            <hr/>
 
             <div className="your-currencies">
-                <h2> Your Currencies </h2>
-                <button className="your-currencies__update"><img onClick={() => setModalCoin(true)} src={pen} alt="update"/></button>
+                <h1>Your Currencies</h1>
+                <div>
+                    <button className="your-currencies__update"><img onClick={() => setModalCoin(true)} src={pen} alt="update"/></button>
+                </div>
             </div>
             <SymbolSumUp assets={props.fund.assets} balance={fundBalance}/>
-            <div onClick={() => setRebalanceModal(true)} className="rebalance">
-                <img src={updateIcon} alt="update"/>
-                <label> Rebalance </label>
-            </div>
 
             <Modal title={"Update percentages"} isOpen={modalPercentage} onClose={() => setModalPercentage(false)}>
                 <AssetSliders assets={props.fund.assets}/>

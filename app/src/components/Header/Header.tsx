@@ -7,14 +7,16 @@ function Header() {
     return (
         <header className="header">
             <Link to="/">
-                <img className="header__logo" src={whiteLogo}></img>
+                <img className="header-logo" src={whiteLogo} alt="logo"></img>
             </Link>
-            <nav className="header__nav">
-                <Link to="/fund" style={{textDecoration: "none"}}>
-                  <button className="header-create-fund-button">Your Fund</button>
-                </Link>
-            </nav>
-            <ConnectKitButton />
+            <div className='header-menu'>
+                <nav className="header__nav">
+                    <Link to="/fund" style={{textDecoration: "none"}}>
+                        <button className="main-button">Your Fund</button>
+                    </Link>
+                </nav>
+                <ConnectKitButton />
+            </div>
         </header>
     );
 }
