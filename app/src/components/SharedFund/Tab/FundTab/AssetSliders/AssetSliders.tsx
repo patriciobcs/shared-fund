@@ -1,70 +1,126 @@
+import { writeContract } from "@wagmi/core";
 import React, { useEffect } from "react";
 import RangeSlider from "react-range-slider-input";
 import "react-range-slider-input/dist/style.css";
 import "./AssetSliders.scss";
-import ConfirmModal from "../../../../Modal/ConfirmModal/ConfirmModal";
+import { sharedFundContract } from "../../../../../App";
+
+async function changeAssets(currentAssets, newAssets, onClose) {
+    console.log(currentAssets, newAssets);
+    const transactionsHashes = [];
+    // get elements that are in currentAssets but not in newAssets
+    const toRemove = currentAssets.filter((asset) => {
+        return newAssets.every((a) => a.coin.symbol !== asset.coin.symbol || a.proportion === 0);
+    });
+    // get elements that are in newAssets but not in currentAssets
+    const toAdd = newAssets.filter((asset) => {
+        return currentAssets.every((a) => a.coin.symbol !== asset.coin.symbol);
+    });
+    // get elements that are in both but have different proportions
+    const toChange = newAssets.filter((asset) => {
+        const currentAsset = currentAssets.filter((a) => a.coin.symbol === asset.coin.symbol)[0];
+        return currentAsset.proportion !== asset.proportion;
+    });
+    console.log(toRemove, toAdd, toChange);
+    // remove elements
+    await toRemove.map(async (asset) => {
+        // remove asset from the fund
+        // not implemented in smart contract yet
+        // const { hash } = await writeContract({
+        //     ...sharedFundContract,
+        //     mode: 'recklesslyUnprepared',
+        //     functionName: 'removeAsset',
+        //     args: [asset.coin.address],
+        // });
+        // transactionsHashes.push(hash);
+    });
+    // add elements
+    await toAdd.map(async (asset) => {
+        // add asset to the fund
+        console.log("adding asset", asset);
+        const { hash } = await writeContract({
+            ...sharedFundContract,
+            mode: 'recklesslyUnprepared',
+            functionName: 'addAsset',
+            args: [asset.coin.address, asset.proportion, asset.coin.feed],
+        });
+        console.log("hash", hash);
+        transactionsHashes.push(hash);
+    });
+    // change elements
+    await toChange.map(async (asset) => {
+        // change asset in the fund
+        const { hash } = await writeContract({
+            ...sharedFundContract,
+            mode: 'recklesslyUnprepared',
+            functionName: 'changeAssetProportion',
+            args: [asset.coin.address, asset.proportion],
+        });
+        transactionsHashes.push(hash);
+    });
+    onClose();
+}
 
 function AssetSliders(props) {
-  const [proportions, setProportions] = React.useState({});
+  const [proportions, setProportions] = React.useState([]);
   const [disabled, setDisabled] = React.useState(false);
-  const [modalOpen, setOpen] = React.useState(false);
 
   useEffect(() => {
-    const _proportions = {};
-    props.assets.map((a) => (_proportions[a.coin.symbol] = a.proportion));
+    const _proportions = Object.values(props.assets).map((asset) => { return Object.assign({}, asset); });
+    
     setProportions(_proportions);
-
     checkTotal(_proportions);
   }, [props.assets]);
 
-  const checkTotal = (prop) => {
+  const checkTotal = (assets) => {
     let total = 0;
-    Object.keys(prop).map((a) => (total += prop[a]));
+    assets.map((asset) => (total += asset.proportion));
     setDisabled(total !== 100);
+    return total;
   };
 
   const changeValue = (symbol, value) => {
-    const _proportions = proportions;
-    _proportions[symbol] = value[1];
-    setProportions({ ..._proportions });
-
+    const _proportions = proportions.slice(0);
+    const asset =_proportions.filter((asset) => asset.coin.symbol === symbol)[0];
+    asset.proportion = value[1];
     checkTotal(_proportions);
+
+    setProportions(_proportions);
   };
 
   return (
     <div className="assets-sliders">
-      {props.assets.map((a) => {
+      {proportions.map((asset) => {
         return (
-          <div className="asset-slider" key={a.coin.symbol}>
-            <label> {a.coin.label} : </label>
+          <div className="asset-slider" key={asset.coin.symbol}>
+            <label> {asset.coin.label}</label>
             <div className="slider-and-proportion">
               <RangeSlider
-                onInput={(value) => changeValue(a.coin.symbol, value)}
+                onInput={(value) => changeValue(asset.coin.symbol, value)}
                 className="single-thumb slider"
-                defaultValue={[0, a.proportion]}
+                defaultValue={[0, asset.proportion]}
                 thumbsDisabled={[true, false]}
                 rangeSlideDisabled={true}
+                min={0}
+                max={100}
                 step={1}
               />
-              <label> {proportions[a.coin.symbol]} % </label>
+              <label> {asset.proportion}% </label>
             </div>
           </div>
         );
       })}
       <button
         className="main-button"
-        onClick={() => setOpen(true)}
+        onClick={async () => await changeAssets(props.assets, proportions, props.onClose)}
         disabled={disabled}
       >
-        {" "}
-        Change Proportions{" "}
+        Change Proportions
       </button>
 
       {disabled ? (
         <label className="warning"> The total should be 100% </label>
       ) : null}
-
-      <ConfirmModal modalOpen={modalOpen} setOpen={setOpen}></ConfirmModal>
     </div>
   );
 }

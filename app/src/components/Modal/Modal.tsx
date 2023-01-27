@@ -18,14 +18,14 @@ const Modal = ({ title, isOpen, onClose, children }) => {
                 <path
                   d="M1 13L13 1"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                 ></path>
                 <path
                   d="M1 0.999999L13 13"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                 ></path>
               </svg>
             </div>

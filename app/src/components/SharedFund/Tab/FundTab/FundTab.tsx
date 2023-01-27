@@ -58,7 +58,7 @@ function FundTab(props){
                     <h1>Members</h1>
                     {
                         props.fund.owners.map((owner) => {
-                            return <Owner name={owner.name} percentage={(owner.investment/props.fund.initialInvestment)*100}/>
+                            return <Owner key={owner.name} name={owner.name} percentage={(owner.investment/props.fund.initialInvestment)*100}/>
                         })
                     }
                     <div className="vertical-list" style={{paddingTop: "3rem"}}>
@@ -75,11 +75,11 @@ function FundTab(props){
             <SymbolSumUp assets={props.fund.assets} balance={fundBalance}/>
 
             <Modal title={"Update percentages"} isOpen={modalPercentage} onClose={() => setModalPercentage(false)}>
-                <AssetSliders assets={props.fund.assets}/>
+                <AssetSliders assets={props.fund.assets} onClose={() => setModalPercentage(false)}/>
             </Modal>
 
             <Modal title={"Update Portfolio coin"} isOpen={modalCoin} onClose={() => setModalCoin(false)}>
-                <CoinChooser assets={props.fund.assets}/>
+                <CoinChooser assets={props.fund.assets} onClose={() => setModalCoin(false)}/>
             </Modal>
 
             <Modal title={"Invite New Member"} isOpen={modalOwner} onClose={() => setModalOwner(false)}>

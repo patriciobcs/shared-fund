@@ -4,7 +4,7 @@ import {
   useWaitForTransaction,
 } from "wagmi";
 import { useDebounce } from "use-debounce";
-import { address, abi } from "../../../App";
+import { sharedFundContract } from "../../../App";
 import { ethers } from "ethers";
 
 export function Transaction({ functionName }) {
@@ -28,8 +28,7 @@ export function Transaction({ functionName }) {
     error: prepareError,
     isError: isPrepareError,
   } = usePrepareContractWrite({
-    address,
-    abi,
+    ...sharedFundContract,
     functionName,
     args,
     enabled: Boolean(amount),

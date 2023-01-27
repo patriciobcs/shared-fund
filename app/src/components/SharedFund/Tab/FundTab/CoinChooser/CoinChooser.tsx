@@ -20,7 +20,6 @@ function CoinChooser(props){
         _coins[index].coin.symbol = event.value;
         _coins[index].coin.label = event.label;
 
-
         setNames([..._names]);
         setFundCoins([..._coins]);
     }
@@ -105,7 +104,7 @@ function CoinChooser(props){
             </div>
 
             <Modal title={"Update percentages"} isOpen={modalPercentage} onClose={() => setModalPercentage(false)}>
-                <AssetSliders assets={fundCoins}/>
+                <AssetSliders assets={fundCoins} onClose={() => { setModalPercentage(false); props.onClose();}}/>
             </Modal>
         </div>
     )

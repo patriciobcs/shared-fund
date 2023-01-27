@@ -7,8 +7,11 @@ import { localhost } from 'wagmi/chains';
 import { ConnectKitProvider, getDefaultClient } from 'connectkit';
 import contract from "./assets/contracts/Portfolio.json";
 import deployment from "./assets/contracts/run-latest.json";
-export const abi = contract.abi;
-export const address = deployment.transactions[0].contractAddress as Address;
+
+export const sharedFundContract = {
+  abi: contract.abi,
+  address: deployment.transactions[0].contractAddress as Address,
+};
 
 const client = createClient(
   getDefaultClient({
