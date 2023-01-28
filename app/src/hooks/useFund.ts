@@ -1,13 +1,14 @@
-// import { readContract, watchReadContract } from "@wagmi/core"
-// import { sharedFundContract } from "../App"
+import { readContract, watchReadContract } from "@wagmi/core"
+import { sharedFundContract } from "../App"
 
 import { useState, useEffect } from "react";
 import { Asset, useAssets } from "./useAssets";
 
 export interface Owner {
   name: string;
-  investment: number;
   address: string;
+  tokenId: number;
+  investment: number;
 }
 
 export interface Fund {
@@ -28,16 +29,26 @@ export function useFund(): Fund {
   }
 
   async function loadOwners(rawOwners?: any) {
-    // if (rawOwners === undefined) {
-    //   let getOwnersConfig = {
-    //     ...sharedFundContract,
-    //     functionName: 'getOwners',
-    //   };
-    //   rawOwners = await readContract(getOwnersConfig)
-    //   const unwatch = watchReadContract(getOwnersConfig, loadOwners);
-    //   dispose([unwatch]);
-    // }
-    // setOwners(rawOwners);
+    if (rawOwners === undefined) {
+      let getOwnersConfig = {
+        ...sharedFundContract,
+        functionName: 'getOwners',
+      };
+      rawOwners = await readContract(getOwnersConfig)
+      const unwatch = watchReadContract(getOwnersConfig, loadOwners);
+      dispose([unwatch]);
+    }
+    let newOwners = [];
+    for (let newOwner of rawOwners) {
+      newOwners.push({
+        name: newOwner.owner.toString(),
+        address: newOwner.owner.toString(),
+        tokenId: newOwner.tokenId.toString(),
+        investment: newOwner.investment.toNumber(),
+      });
+    }
+    console.log("newOwners", newOwners);
+    setOwners(newOwners);
   }
 
   useEffect(() => {

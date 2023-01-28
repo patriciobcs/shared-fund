@@ -14,6 +14,8 @@ contract SharedFund is ERC721 {
 
     mapping(address => uint256) public owners;
 
+    address[] public ownersList;
+
     constructor() ERC721("SharedFund", "SHAFU") {}
 
     /// @notice invites a user to join the fund
@@ -34,6 +36,7 @@ contract SharedFund is ERC721 {
         _safeMint(recipient, newItemId);
         shares[newItemId] = 0;
         owners[recipient] = newItemId;
+        ownersList.push(recipient);
         return newItemId;
     }
 
@@ -46,6 +49,22 @@ contract SharedFund is ERC721 {
 
         _transfer(from, to, tokenId);
         owners[to] = tokenId;
+    }
+
+    struct OwnerData {
+        address owner;
+        uint256 tokenId;
+        uint256 share;
+    }
+
+    function getOwners() public view returns (OwnerData[] memory) {
+        OwnerData[] memory ownersData = new OwnerData[](ownersList.length);
+        for (uint256 i = 0; i < ownersList.length; i++) {
+            ownersData[i].owner = ownersList[i];
+            ownersData[i].tokenId = tokenIdOf(ownersData[i].owner);
+            ownersData[i].share = shareOf(ownersData[i].tokenId );
+        }
+        return ownersData;
     }
 
     /**

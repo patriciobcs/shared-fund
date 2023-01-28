@@ -78,7 +78,6 @@ export function useAssets(): Asset[] {
       const unwatch = watchReadContract(getAssetsConfig, loadAssets);
       dispose([unwatch]);
     }
-    console.log(rawAssets);
     let newAssets = [];
     for (let i = 0; i < rawAssets.length; i++) {
       // TODO: This is a hack to get the price to display correctly. Need to figure out why the price is off by 10^10
