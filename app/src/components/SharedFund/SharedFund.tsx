@@ -1,23 +1,14 @@
 import "./SharedFund.scss";
 import "../Home/Home.scss";
 import Header from "../Header/Header";
-import React, { useEffect } from "react";
-import { Fund, getFund } from "../../Simulation";
+import { useState } from "react";
 import FundTab from "./Tab/FundTab/FundTab";
 import InvestTab from "./Tab/InvestTab/InvestTab";
+import { useFund } from "../../hooks/useFund";
 
-function SharedFund(props) {
-  const [tab, setTab] = React.useState("fund");
-  const [fund, setFund] = React.useState<Fund>({
-    owners: [],
-    assets: [],
-    initialInvestment: 0,
-  });
-
-  useEffect(() => {
-    const _fund = getFund();
-    setFund(_fund);
-  }, []);
+function SharedFund() {
+  const [tab, setTab] = useState("fund");
+  const fund = useFund();
 
   return (
     <div>

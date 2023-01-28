@@ -26,7 +26,7 @@ function SymbolSumUp(props){
                         <td>{asset.price} $</td>
                         <td>{asset.amount}</td>
                         <td>{asset.balance} $</td>
-                        <td>{(100*asset.balance/props.balance).toFixed(2)} %</td>
+                        <td>{(100*asset.balance/(props.balance || 1)).toFixed(2)} %</td>
                         <td>{asset.proportion} %</td>
                     </tr>
                 );

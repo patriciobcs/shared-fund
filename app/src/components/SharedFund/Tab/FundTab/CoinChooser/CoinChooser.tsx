@@ -1,9 +1,9 @@
 import "./CoinChooser.scss"
 import React, {useEffect} from "react";
 import Select from "react-select";
-import { Asset, coins, emptyAsset } from "../../../../../Simulation";
 import AssetSliders from "../AssetSliders/AssetSliders";
 import Modal from "../../../../Modal/Modal";
+import { Asset, coins, emptyAsset } from "../../../../../hooks/useAssets";
 
 function CoinChooser(props){
     const allCoins = Object.values(coins);

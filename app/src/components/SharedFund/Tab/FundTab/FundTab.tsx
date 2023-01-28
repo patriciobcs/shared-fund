@@ -12,7 +12,6 @@ import CoinChooser from "./CoinChooser/CoinChooser";
 import ConfirmModal from "../../../Modal/ConfirmModal/ConfirmModal";
 
 function FundTab(props){
-
     const [modalPercentage, setModalPercentage] = useState(false);
     const [modalCoin, setModalCoin] = useState(false);
     const [fundBalance, setFundBalance] = useState(0);
@@ -34,6 +33,7 @@ function FundTab(props){
         setPieData(data);
         setFundBalance(balance)
     },[props.fund])
+    
     return (
         <div style={{paddingBottom:15}} className="fund-tab">
             <div className={"fund-tab__info"}>

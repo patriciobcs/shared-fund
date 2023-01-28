@@ -3,14 +3,14 @@ import { useEffect, useState } from "react";
 import randomColor from "randomcolor";
 import "../Tab.scss";
 import "./InvestTab.scss";
-import { Owner } from "../../../../Simulation";
 import Modal from "../../../Modal/Modal";
 import { Transaction } from "../../../Modal/Transaction/Transaction";
+import { getAccount } from "@wagmi/core";
 
 function InvestTab(props) {
   const [fundBalance, setFundBalance] = useState(0);
   const [pieData, setPieData] = useState([]);
-  const [owner] = useState<Owner>(props.fund.owners[0]);
+  const [investment, setInvestment] = useState(0);
   const [roi, setRoi] = useState(0);
   const [percentage, setPercentage] = useState(0);
   const [modalDeposit, setModalDeposit] = useState(false);
@@ -22,21 +22,27 @@ function InvestTab(props) {
     props.fund.assets.map((a) => {
       balance += a.balance;
     });
-    let percentage = owner.investment / props.fund.initialInvestment;
-    setPercentage(percentage);
+    const account = getAccount();
+    const possibleOwners = props.fund.owners.filter((o) => o.address === account.address);
+    if (possibleOwners.length === 1) {
+      var currentOwner = possibleOwners[0];
+      let percentage = currentOwner.investment / props.fund.initialInvestment;
+      setPercentage(percentage);
 
-    props.fund.assets.map((a) => {
-      data.push({
-        title: a.coin.symbol,
-        value: a.balance * percentage,
-        color: randomColor(),
+      props.fund.assets.map((a) => {
+        data.push({
+          title: a.coin.symbol,
+          value: a.balance * percentage,
+          color: randomColor(),
+        });
       });
-    });
 
-    setPieData(data);
-    setRoi((balance * percentage) / owner.investment);
-    setFundBalance(balance);
-  }, [props.fund]);
+      setPieData(data);
+      setRoi((balance * percentage) / currentOwner.investment);
+      setFundBalance(balance);
+      setInvestment(currentOwner.investment);
+    }
+  }, [props.fund.owners, props.fund.assets, props.fund.initialInvestment]);
 
   return (
     <div style={{ height: 750 }} className="fund-tab">
@@ -63,7 +69,7 @@ function InvestTab(props) {
           <h1> Statistics </h1>
           <div className="vertical-list">
             <label>Fund Percentage: {(percentage * 100).toFixed(0)}%</label>
-            <label>Your Investment: ${owner.investment}</label>
+            <label>Your Investment: ${investment}</label>
             <label>ROI: {(roi * 100).toFixed(2)}% </label>
           </div>
           <div className="vertical-list" style={{ paddingTop: "3rem" }}>
