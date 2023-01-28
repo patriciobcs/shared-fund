@@ -70,8 +70,11 @@ make anvil-fork-mainnet # start a mainnet fork
 # - the mainnet rpc url (you can get one in alchemy.com)
 make deploy-anvil # deploy the contract to the mainnet fork
 cd app && yarn && yarn dev # start the app
-# change the network of your wallet to localhost:8545
 # import the private key from anvil to your wallet
 # open the app in http://localhost:3000
 # connect your wallet and start using the app
+# change the network of your wallet to localhost:8545
+# change the chainId of the localnet on metamask to 1
+# copy your public address and invite yourself
+# using the "Invite New Owner" button in "/fund" 
 ```

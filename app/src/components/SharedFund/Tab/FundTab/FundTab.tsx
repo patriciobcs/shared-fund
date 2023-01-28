@@ -10,6 +10,7 @@ import "../Tab.scss";
 import "./FundTab.scss";
 import CoinChooser from "./CoinChooser/CoinChooser";
 import ConfirmModal from "../../../Modal/ConfirmModal/ConfirmModal";
+import { Invite } from "../../../Modal/Invite/Invite";
 
 function FundTab(props) {
   const [modalPercentage, setModalPercentage] = useState(false);
@@ -63,7 +64,7 @@ function FundTab(props) {
         </div>
 
         <div className="fund-tab__side-tab vertical-list">
-          <h1>Members</h1>
+          <h1>Owners</h1>
           {props.fund.owners.map((owner) => {
             return (
               <Owner
@@ -77,7 +78,7 @@ function FundTab(props) {
           })}
           <div className="vertical-list" style={{ paddingTop: "3rem" }}>
             <button className="main-button" onClick={() => setModalOwner(true)}>
-              Invite New Member
+              Invite New Owner
             </button>
             <button
               className="main-button"
@@ -120,17 +121,11 @@ function FundTab(props) {
       </Modal>
 
       <Modal
-        title={"Invite New Member"}
+        title={"Invite New Owner"}
         isOpen={modalOwner}
         onClose={() => setModalOwner(false)}
       >
-        <div className="modal-with-input">
-          <div className="vertical-list">
-            <label>Member Address</label>
-            <input type="text" />
-          </div>
-          <button className="main-button"> Confirm </button>
-        </div>
+        <Invite />
       </Modal>
 
       <ConfirmModal
