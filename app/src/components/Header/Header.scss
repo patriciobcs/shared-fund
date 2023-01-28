@@ -1,0 +1,27 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &-logo {
+    width:50px;
+    height:50px;
+  }
+
+  &-menu {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  
+  .primary {
+    background: transparent;
+    border: 2px solid white;
+
+    div:hover {
+      background-color: white;
+      color: black;
+    }
+  }
+}

@@ -1,0 +1,37 @@
+.your-currencies{
+  padding: 50px 0;
+  display:flex;
+  justify-content: space-between;
+
+  &__update{
+    background: none;
+    border: none;
+    cursor: pointer;
+    img {
+      height: 30px;
+      width: 30px;
+    }
+  }
+}
+
+.fund-tab__info__chart-update {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  img {
+    height: 30px;
+    width: 30px;
+  }
+
+}
+
+.modal-with-input{
+  height:150px;
+
+  label {
+    margin-right:15px;
+  }
+}

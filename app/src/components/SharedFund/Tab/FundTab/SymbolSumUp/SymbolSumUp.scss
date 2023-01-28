@@ -1,0 +1,29 @@
+.sumup{
+  margin-left:auto;
+  margin-right:auto;
+  width:100%;
+
+  border-collapse: collapse;
+
+  td, th {
+    padding-top:25px;
+    padding-bottom:25px;
+  }
+
+  td {
+    font-size:1.25rem;
+  }
+
+  tbody tr {
+    border-top: solid 1px darkgray;
+    border-radius: 10px;
+  }
+
+  &__symbol{
+    color:gray;
+  }
+
+  tbody, thead{
+    text-align:center;
+  }
+}

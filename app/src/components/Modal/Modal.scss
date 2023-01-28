@@ -1,0 +1,74 @@
+.modal{
+  &-overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    animation: fadeIn 0.2s;
+  }
+  &-content{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color:#292929;
+    color:white;
+    border-radius:10px;
+    width: 400px;
+    padding: 1rem 2rem;
+  }
+  &-title{
+    display: flex;
+    position: relative;
+    width: 100%;
+    margin: auto;
+    justify-content: center;
+    color: white;
+  }
+
+  &-close-button {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    opacity: 0.5;
+    transform: translate(0, -25%);
+    bottom: 0;
+    background: transparent;
+    border-radius: 50px;
+  }
+}
+
+.warning {
+  color:red;
+  padding-top:15px;
+}  
+
+.info {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  flex-direction: column;
+}
+
+input{
+  display:flex;
+  justify-content: center;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  padding: 0 10px;
+  border: none;
+  height: 40px;
+}
+
+// animation of opacity 
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

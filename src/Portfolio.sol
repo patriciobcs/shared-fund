@@ -191,6 +191,32 @@ contract Portfolio is Ownable, SharedFund {
         return tokens;
     }
 
+    struct AssetData {
+        address token;
+        bool active;
+        uint256 proportion;
+        uint256 amount;
+        uint256 decimals;
+        uint256 price;
+        uint256 balance;
+    }
+
+    /// @notice Returns all the assets in the portfolio.
+    /// @return An array of all the tokens in the portfolio.
+    function getAssets() public view returns (AssetData[] memory) {
+        AssetData[] memory assetsData = new AssetData[](tokens.length);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            assetsData[i].token = tokens[i];
+            assetsData[i].active = assets[tokens[i]].active;
+            assetsData[i].proportion = assets[tokens[i]].proportion;
+            assetsData[i].amount = IERC20(tokens[i]).balanceOf(address(this));
+            assetsData[i].decimals = IERC20Metadata(tokens[i]).decimals();
+            assetsData[i].price = uint256(priceFeeds.getLatestPrice(tokens[i]));
+            assetsData[i].balance = assetsData[i].amount * assetsData[i].price;
+        }
+        return assetsData;
+    }
+
     /// @notice Returns the USD value of the fund for a specific asset.
     /// @dev The value is calculated by multiplying the ERC20.balanceOf(this) by the priceFeed.
     /// @param _token The address of the token to get the fund value of.
