@@ -23,7 +23,9 @@ function InvestTab(props) {
       balance += a.balance;
     });
     const account = getAccount();
-    const possibleOwners = props.fund.owners.filter((o) => o.address === account.address);
+    const possibleOwners = props.fund.owners.filter(
+      (o) => o.address === account.address
+    );
     if (possibleOwners.length === 1) {
       var currentOwner = possibleOwners[0];
       let percentage = currentOwner.investment / props.fund.initialInvestment;

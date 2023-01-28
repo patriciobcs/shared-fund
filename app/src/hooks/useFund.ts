@@ -1,9 +1,8 @@
 // import { readContract, watchReadContract } from "@wagmi/core"
 // import { sharedFundContract } from "../App"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Asset, useAssets } from "./useAssets";
-
 
 export interface Owner {
   name: string;
@@ -11,7 +10,7 @@ export interface Owner {
   address: string;
 }
 
-export interface Fund{
+export interface Fund {
   assets: Asset[];
   owners: Owner[];
   initialInvestment: number;
@@ -23,7 +22,7 @@ export function useFund(): Fund {
   const assets = useAssets();
   const [disposables, setDisposables] = useState([]);
 
-  function dispose(replaceDisposables) {  
+  function dispose(replaceDisposables) {
     disposables.forEach((unwatch) => unwatch());
     setDisposables(replaceDisposables);
   }
@@ -49,5 +48,5 @@ export function useFund(): Fund {
     initialInvestment,
     owners,
     assets,
-  }
+  };
 }
