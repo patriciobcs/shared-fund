@@ -52,7 +52,7 @@ export function useFund(): Fund {
         name: newOwner.owner.toString(),
         address: newOwner.owner.toString(),
         tokenId: newOwner.tokenId.toString(),
-        share: newOwner.share.toNumber(),
+        share: newOwner.share.div(10 ** 2).toNumber(),
       });
     }
     console.log("newOwners", newOwners);

@@ -5,11 +5,12 @@ import {
 } from "wagmi";
 import { sharedFundContract } from "../../../App";
 import { useState } from "react";
+import { ethers } from "ethers";
 
-export function Transaction(nftId) {
-  const [amount, setAmount] = useState(1);
+export function Deposit({ tokenId }) {
+  const [amount, setAmount] = useState('1');
 
-  const isEnabled = amount > 0 && Boolean(nftId);
+  const isEnabled = amount.length > 0 && parseInt(amount) > 0 && Boolean(tokenId);
 
   const {
     config,
@@ -18,28 +19,31 @@ export function Transaction(nftId) {
   } = usePrepareContractWrite({
     ...sharedFundContract,
     functionName: "deposit",
-    args: [nftId],
+    args: [tokenId],
     enabled: isEnabled,
     overrides: {
-      value: amount,
+      value: isEnabled ? ethers.utils.parseEther(amount) : 0,
     },
   });
   const { data, error, isError, write } = useContractWrite(config);
   const { isLoading, isSuccess } = useWaitForTransaction({ hash: data?.hash });
 
+  console.log(tokenId, amount);
+
   return (
     <div className="vertical-list">
       <label>Amount</label>
       <input
-        disabled={!write || isLoading}
+        disabled={isLoading}
         type="number"
         value={amount}
-        onChange={(e) => setAmount(parseInt(e.target.value))}
+        onChange={(e) => setAmount(e.target.value)}
       />
       <button
         disabled={!isEnabled || !write || isLoading}
         className="main-button"
         type="submit"
+        onClick={() => write()}
       >
         Send
       </button>

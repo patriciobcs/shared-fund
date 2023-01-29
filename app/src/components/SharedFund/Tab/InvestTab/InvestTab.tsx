@@ -4,18 +4,20 @@ import randomColor from "randomcolor";
 import "../Tab.scss";
 import "./InvestTab.scss";
 import Modal from "../../../Modal/Modal";
-import { Transaction } from "../../../Modal/Transaction/Transaction";
+import { Deposit } from "../../../Modal/Deposit/Deposit";
 import { getAccount } from "@wagmi/core";
 
 function InvestTab({ fund }) {
   const [fundBalance, setFundBalance] = useState(0);
   const [pieData, setPieData] = useState([]);
   const [investment, setInvestment] = useState(0);
-  const [roi, setRoi] = useState(0);
+  // const [roi, setRoi] = useState(0);
   const [percentage, setPercentage] = useState(0);
   const [modalDeposit, setModalDeposit] = useState(false);
   const [modalWithdraw, setModalWithdraw] = useState(false);
-  const [nftId, setNftId] = useState(null);
+  const [tokenId, setTokenId] = useState(null);
+
+  const isMember = tokenId !== null;
 
   useEffect(() => {
     const data = [];
@@ -25,7 +27,7 @@ function InvestTab({ fund }) {
     );
     if (possibleOwners.length === 1) {
       const currentOwner = possibleOwners[0];
-      setNftId(currentOwner.nftId);
+      setTokenId(currentOwner.tokenId);
       setPercentage(currentOwner.share);
       setFundBalance(fund.totalInvestment);
 
@@ -33,19 +35,19 @@ function InvestTab({ fund }) {
         fund.assets.forEach((a) => {
           data.push({
             title: a.coin.symbol,
-            value: a.balance * currentOwner.share,
+            value: a.balance * currentOwner.share / 100,
             color: randomColor(),
           });
         });
 
         setPieData(data);
-        setInvestment(currentOwner.share * fund.totalInvestment);
+        setInvestment(currentOwner.share * fund.totalInvestment / 100);
       }
     } else {
       setPieData([]);
       setFundBalance(0);
       setInvestment(0);
-      setNftId(null);
+      setTokenId(null);
     }
   }, [fund.owners, fund.assets, fund.totalInvestment]);
 
@@ -67,14 +69,14 @@ function InvestTab({ fund }) {
             labelPosition={60}
             lineWidth={20}
           />
-          <h2> Your Balance: ${fundBalance * percentage} USD </h2>
+          <h2> Your Balance: ${fundBalance * percentage / 100} USD </h2>
         </div>
 
         <div className="fund-tab__side-tab">
-          <h1> {nftId !== null ? "Statistics" : "Only Invited"}</h1>
-          {nftId !== null ? (
+          <h1> {isMember ? "Statistics" : "Only Invited"}</h1>
+          {isMember ? (
             <div className="vertical-list">
-              <label>Fund Percentage: {(percentage * 100).toFixed(0)}%</label>
+              <label>Fund Percentage: {percentage}%</label>
               <label>Your Investment: ${investment}</label>
               {/* <label>ROI: {(roi * 100).toFixed(2)}% </label> */}
             </div>
@@ -85,7 +87,7 @@ function InvestTab({ fund }) {
           )}
           <div className="vertical-list" style={{ paddingTop: "3rem" }}>
             <button
-              disabled={nftId === null}
+              disabled={!isMember}
               className="main-button"
               onClick={() => {
                 setModalDeposit(true);
@@ -94,7 +96,7 @@ function InvestTab({ fund }) {
               Deposit
             </button>
             <button
-              disabled={nftId === null}
+              disabled={!isMember}
               className="main-button"
               onClick={() => {
                 setModalWithdraw(true);
@@ -102,7 +104,7 @@ function InvestTab({ fund }) {
             >
               Withdraw
             </button>
-            <button disabled={nftId === null} className="main-button">
+            <button disabled={!isMember} className="main-button">
               Sell Shares
             </button>
           </div>
@@ -113,16 +115,16 @@ function InvestTab({ fund }) {
           isOpen={modalDeposit}
           onClose={() => setModalDeposit(false)}
         >
-          <Transaction functionName={"deposit"} />
+          <Deposit tokenId={tokenId} />
         </Modal>
 
-        <Modal
+        {/* <Modal
           title={"Withdraw"}
           isOpen={modalWithdraw}
           onClose={() => setModalWithdraw(false)}
         >
           <Transaction functionName={"withdraw"} />
-        </Modal>
+        </Modal> */}
       </div>
     </div>
   );

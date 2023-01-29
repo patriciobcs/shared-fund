@@ -70,7 +70,7 @@ function FundTab({ fund }) {
               <Owner
                 key={owner.address}
                 name={owner.name}
-                percentage={owner.share}
+                share={owner.share}
               />
             );
           })}

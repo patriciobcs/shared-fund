@@ -87,12 +87,11 @@ export function useAssets(): Asset[] {
         coin: Object.values(coins).filter((token) => {
           return (token.address = rawAssets[i].token);
         })[0],
-        amount: rawAssets[i].amount.toNumber(),
+        amount: rawAssets[i].amount.div(10 ** 15).div(10 ** 3).toNumber(),
         price:
-          rawAssets[i].price.toNumber() /
-          (priceDenominator > 0 ? priceDenominator : 1),
+          rawAssets[i].price.div(priceDenominator).toNumber(),
         proportion: rawAssets[i].proportion.toNumber() / proportionDenominator,
-        balance: rawAssets[i].balance.toNumber(),
+        balance: rawAssets[i].balance.div(10 ** 15).div(10 ** 11).toNumber(),
       });
     }
     console.log("newAssets", newAssets);
