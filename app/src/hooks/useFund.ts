@@ -38,6 +38,7 @@ export function useFund(): Fund {
       const unwatch = watchReadContract(getOwnersConfig, loadOwners);
       dispose([unwatch]);
     }
+    console.log("rawOwners", rawOwners);
     let newOwners = [];
     for (let newOwner of rawOwners) {
       newOwners.push({

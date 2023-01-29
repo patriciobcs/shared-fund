@@ -15,6 +15,7 @@ function InvestTab(props) {
   const [percentage, setPercentage] = useState(0);
   const [modalDeposit, setModalDeposit] = useState(false);
   const [modalWithdraw, setModalWithdraw] = useState(false);
+  const [nftId, setNftId] = useState(null);
 
   useEffect(() => {
     const data = [];
@@ -43,6 +44,13 @@ function InvestTab(props) {
       setRoi((balance * percentage) / currentOwner.investment);
       setFundBalance(balance);
       setInvestment(currentOwner.investment);
+      setNftId(currentOwner.nftId);
+    } else {
+      setPieData([]);
+      setRoi(0);
+      setFundBalance(0);
+      setInvestment(0);
+      setNftId(null);
     }
   }, [props.fund.owners, props.fund.assets, props.fund.initialInvestment]);
 
@@ -68,14 +76,17 @@ function InvestTab(props) {
         </div>
 
         <div className="fund-tab__side-tab">
-          <h1> Statistics </h1>
-          <div className="vertical-list">
-            <label>Fund Percentage: {(percentage * 100).toFixed(0)}%</label>
-            <label>Your Investment: ${investment}</label>
-            <label>ROI: {(roi * 100).toFixed(2)}% </label>
-          </div>
+          <h1> {nftId !== null ? "Statistics" : "Only Invited" }</h1>
+          { nftId !== null ? (
+            <div className="vertical-list">
+              <label>Fund Percentage: {(percentage * 100).toFixed(0)}%</label>
+              <label>Your Investment: ${investment}</label>
+              <label>ROI: {(roi * 100).toFixed(2)}% </label>
+            </div>
+          ) : ( <label>You need an invitation to being able to invest in this fund.</label>)}
           <div className="vertical-list" style={{ paddingTop: "3rem" }}>
             <button
+              disabled={nftId === null}
               className="main-button"
               onClick={() => {
                 setModalDeposit(true);
@@ -84,6 +95,7 @@ function InvestTab(props) {
               Deposit
             </button>
             <button
+              disabled={nftId === null}
               className="main-button"
               onClick={() => {
                 setModalWithdraw(true);
@@ -91,7 +103,9 @@ function InvestTab(props) {
             >
               Withdraw
             </button>
-            <button className="main-button">Sell Shares</button>
+            <button disabled={nftId === null} className="main-button">
+              Sell Shares
+            </button>
           </div>
         </div>
 
