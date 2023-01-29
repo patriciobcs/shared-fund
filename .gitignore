@@ -6,3 +6,4 @@ broadcast
 shared-fund.iml
 **/.env
 **/node_modules
+app/src/assets/contracts/**

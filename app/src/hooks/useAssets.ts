@@ -1,7 +1,7 @@
-import { readContract, watchReadContract } from "@wagmi/core";
 import { sharedFundContract } from "../App";
 
 import { useState, useEffect } from "react";
+import { useContractRead } from "wagmi";
 
 export interface Asset {
   coin: Coin;
@@ -61,47 +61,38 @@ export const coins: { [key: string]: Coin } = {
 
 export function useAssets(): Asset[] {
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [disposables, setDisposables] = useState([]);
 
-  function dispose(replaceDisposables) {
-    disposables.forEach((unwatch) => unwatch());
-    setDisposables(replaceDisposables);
-  }
+  let getAssetsConfig = {
+    ...sharedFundContract,
+    functionName: "getAssets",
+  };
 
-  async function loadAssets(rawAssets?: any) {
-    if (rawAssets === undefined) {
-      let getAssetsConfig = {
-        ...sharedFundContract,
-        functionName: "getAssets",
-      };
-      rawAssets = await readContract(getAssetsConfig);
-      const unwatch = watchReadContract(getAssetsConfig, loadAssets);
-      dispose([unwatch]);
-    }
-    let newAssets = [];
-    for (let i = 0; i < rawAssets.length; i++) {
-      // TODO: This is a hack to get the price to display correctly. Need to figure out why the price is off by 10^10
-      const priceDenominator = 10 ** (rawAssets[i].decimals.toNumber() - 10);
-      const proportionDenominator = 10 ** 2;
-      newAssets.push({
-        coin: Object.values(coins).filter((token) => {
-          return (token.address = rawAssets[i].token);
-        })[0],
-        amount: rawAssets[i].amount.toNumber(),
-        price:
-          rawAssets[i].price.toNumber() /
-          (priceDenominator > 0 ? priceDenominator : 1),
-        proportion: rawAssets[i].proportion.toNumber() / proportionDenominator,
-        balance: rawAssets[i].balance.toNumber(),
-      });
-    }
-    console.log("newAssets", newAssets);
-    setAssets(newAssets);
-  }
+  const { data: rawAssets }: any = useContractRead(getAssetsConfig);
 
   useEffect(() => {
-    loadAssets();
-  }, []);
-
+    if (rawAssets === undefined) { return; }
+    let newAssets = [];
+    let allCoins = Object.values(coins);
+    for (let i = 0; i < rawAssets.length; i++) {
+      // TODO: This is a hack to get the price to display correctly. Need to figure out why the price is off by 10^10
+      console.log("decimals", rawAssets[i].decimals.toNumber());
+      const extraDecimals = rawAssets[i].decimals.toNumber() - 8;
+      const proportionDenominator = 10 ** 2;
+      const coin = allCoins.filter((token) => {
+        return (token.address === rawAssets[i].token);
+      })[0];
+      newAssets.push({
+        coin,
+        amount: rawAssets[i].amount.div(10 ** 8).div(10 ** extraDecimals).toNumber(),
+        price:
+          rawAssets[i].price.div(10 ** 8).toNumber(),
+        proportion: rawAssets[i].proportion.toNumber() / proportionDenominator,
+        balance: rawAssets[i].balance.div(10 ** 15).div(10 ** 11).toNumber(),
+      });
+    }
+    console.log("newAssets", coins);
+    setAssets(newAssets);
+  }, [rawAssets]);
+    
   return assets;
 }

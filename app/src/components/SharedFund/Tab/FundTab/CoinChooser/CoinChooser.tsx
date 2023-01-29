@@ -5,7 +5,7 @@ import AssetSliders from "../AssetSliders/AssetSliders";
 import Modal from "../../../../Modal/Modal";
 import { Asset, coins, emptyAsset } from "../../../../../hooks/useAssets";
 
-function CoinChooser(props){
+function CoinChooser({ assets, onClose }){
     const allCoins = Object.values(coins);
     const [fundCoins, setFundCoins] = React.useState<Asset[]>([emptyAsset]);
     const [fundCoinNames, setNames] = React.useState([]);
@@ -16,12 +16,13 @@ function CoinChooser(props){
         const _coins = fundCoins;
         const _names = fundCoinNames;
 
+        console.log(event, index);
+
         _names[index] = event.label;
-        _coins[index].coin.symbol = event.value;
-        _coins[index].coin.label = event.label;
+        _coins[index].coin = event;
 
         setNames([..._names]);
-        setFundCoins([..._coins]);
+        setFundCoins(_coins);
     }
 
     const addCoin = () => {
@@ -31,7 +32,7 @@ function CoinChooser(props){
         _names.push("");
         _coins.push(emptyAsset);
         setNames([..._names]);
-        setFundCoins([..._coins]);
+        setFundCoins(_coins);
     }
 
     useEffect(() => {
@@ -57,9 +58,9 @@ function CoinChooser(props){
     useEffect(() => {
         const _coins = [];
         const _names = [];
-        props.assets.map((a) => {
-            _coins.push(a)
-            _names.push(a.coin.label);
+        assets.map((asset) => {
+            _coins.push(Object.assign({}, asset));
+            _names.push(asset.coin.label);
         });
         setNames(_names);
         setFundCoins(_coins);
@@ -84,8 +85,8 @@ function CoinChooser(props){
                                 <td>
                                     <Select
                                         onChange={(event) => selectChange(event,index)}
-                                        value={{label:fundCoins[index].coin.label}}
-                                        {...props}
+                                        value={{label: fundCoins[index].coin.label}}
+                                        {...{ allCoins }}
                                         maxMenuHeight={100}
                                         className="react-select-container"
                                         classNamePrefix="react-select"
@@ -104,7 +105,7 @@ function CoinChooser(props){
             </div>
 
             <Modal title={"Update percentages"} isOpen={modalPercentage} onClose={() => setModalPercentage(false)}>
-                <AssetSliders assets={fundCoins} onClose={() => { setModalPercentage(false); props.onClose();}}/>
+                <AssetSliders currentAssets={assets} newAssets={fundCoins} onClose={() => { setModalPercentage(false); onClose();}}/>
             </Modal>
         </div>
     )
