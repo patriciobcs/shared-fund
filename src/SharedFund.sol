@@ -40,6 +40,13 @@ contract SharedFund is ERC721 {
         return newItemId;
     }
 
+    function transferShares(address to) public{
+        uint256 tokenId = tokenIdOf(msg.sender);
+        require(tokenId> 0, "ERC721: caller is not token owner");
+        require(tokenIdOf(to) == 0, "The receiver already has shares");
+
+        transferFrom(msg.sender, to, tokenId);
+    }
     /**
      * @dev See {IERC721-transferFrom}.
      */
