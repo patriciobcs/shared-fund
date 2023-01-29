@@ -7,7 +7,7 @@ import Modal from "../../../Modal/Modal";
 import { Transaction } from "../../../Modal/Transaction/Transaction";
 import { getAccount } from "@wagmi/core";
 
-function InvestTab(props) {
+function InvestTab({ fund }) {
   const [fundBalance, setFundBalance] = useState(0);
   const [pieData, setPieData] = useState([]);
   const [investment, setInvestment] = useState(0);
@@ -19,40 +19,35 @@ function InvestTab(props) {
 
   useEffect(() => {
     const data = [];
-    let balance = 0;
-    props.fund.assets.map((a) => {
-      balance += a.balance;
-    });
     const account = getAccount();
-    const possibleOwners = props.fund.owners.filter(
+    const possibleOwners = fund.owners.filter(
       (o) => o.address === account.address
     );
     if (possibleOwners.length === 1) {
-      var currentOwner = possibleOwners[0];
-      let percentage = currentOwner.investment / props.fund.initialInvestment;
-      setPercentage(percentage);
-
-      props.fund.assets.map((a) => {
-        data.push({
-          title: a.coin.symbol,
-          value: a.balance * percentage,
-          color: randomColor(),
-        });
-      });
-
-      setPieData(data);
-      setRoi((balance * percentage) / currentOwner.investment);
-      setFundBalance(balance);
-      setInvestment(currentOwner.investment);
+      const currentOwner = possibleOwners[0];
       setNftId(currentOwner.nftId);
+      setPercentage(currentOwner.share);
+      setFundBalance(fund.totalInvestment);
+
+      if (currentOwner.share > 0) {
+        fund.assets.forEach((a) => {
+          data.push({
+            title: a.coin.symbol,
+            value: a.balance * currentOwner.share,
+            color: randomColor(),
+          });
+        });
+
+        setPieData(data);
+        setInvestment(currentOwner.share * fund.totalInvestment);
+      }
     } else {
       setPieData([]);
-      setRoi(0);
       setFundBalance(0);
       setInvestment(0);
       setNftId(null);
     }
-  }, [props.fund.owners, props.fund.assets, props.fund.initialInvestment]);
+  }, [fund.owners, fund.assets, fund.totalInvestment]);
 
   return (
     <div style={{ height: 750 }} className="fund-tab">
@@ -76,14 +71,18 @@ function InvestTab(props) {
         </div>
 
         <div className="fund-tab__side-tab">
-          <h1> {nftId !== null ? "Statistics" : "Only Invited" }</h1>
-          { nftId !== null ? (
+          <h1> {nftId !== null ? "Statistics" : "Only Invited"}</h1>
+          {nftId !== null ? (
             <div className="vertical-list">
               <label>Fund Percentage: {(percentage * 100).toFixed(0)}%</label>
               <label>Your Investment: ${investment}</label>
-              <label>ROI: {(roi * 100).toFixed(2)}% </label>
+              {/* <label>ROI: {(roi * 100).toFixed(2)}% </label> */}
             </div>
-          ) : ( <label>You need an invitation to being able to invest in this fund.</label>)}
+          ) : (
+            <label>
+              You need an invitation to being able to invest in this fund.
+            </label>
+          )}
           <div className="vertical-list" style={{ paddingTop: "3rem" }}>
             <button
               disabled={nftId === null}

@@ -8,17 +8,17 @@ export interface Owner {
   name: string;
   address: string;
   tokenId: number;
-  investment: number;
+  share: number;
 }
 
 export interface Fund {
   assets: Asset[];
   owners: Owner[];
-  initialInvestment: number;
+  totalInvestment: number;
 }
 
 export function useFund(): Fund {
-  const [initialInvestment, setInitialInvestment] = useState(0);
+  const [totalInvestment, setTotalInvestment] = useState(0);
   const [owners, setOwners] = useState<Owner[]>([]);
   const assets = useAssets();
   const [disposables, setDisposables] = useState([]);
@@ -28,7 +28,14 @@ export function useFund(): Fund {
     setDisposables(replaceDisposables);
   }
 
-  async function loadOwners(rawOwners?: any) {
+  useEffect(() => {
+    let newTotalInvestment = assets.reduce((total, asset) => {
+      return total + asset.balance;
+    }, 0);
+    setTotalInvestment(newTotalInvestment);
+  }, [assets]);
+
+  const loadOwners = async (rawOwners?: any) => {
     if (rawOwners === undefined) {
       let getOwnersConfig = {
         ...sharedFundContract,
@@ -45,7 +52,7 @@ export function useFund(): Fund {
         name: newOwner.owner.toString(),
         address: newOwner.owner.toString(),
         tokenId: newOwner.tokenId.toString(),
-        investment: newOwner.investment.toNumber(),
+        share: newOwner.share.toNumber(),
       });
     }
     console.log("newOwners", newOwners);
@@ -57,7 +64,7 @@ export function useFund(): Fund {
   }, []);
 
   return {
-    initialInvestment,
+    totalInvestment,
     owners,
     assets,
   };
