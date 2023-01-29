@@ -102,7 +102,7 @@ function FundTab({ fund }) {
         onClose={() => setModalPercentage(false)}
       >
         <AssetSliders
-          assets={fund.assets}
+          currentAssets={fund.assets}
           onClose={() => setModalPercentage(false)}
         />
       </Modal>

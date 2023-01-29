@@ -1,4 +1,3 @@
-import { readContract, watchReadContract } from "@wagmi/core";
 import { sharedFundContract } from "../App";
 
 import { useState, useEffect } from "react";
@@ -62,7 +61,6 @@ export const coins: { [key: string]: Coin } = {
 
 export function useAssets(): Asset[] {
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [disposables, setDisposables] = useState([]);
 
   let getAssetsConfig = {
     ...sharedFundContract,
@@ -74,22 +72,25 @@ export function useAssets(): Asset[] {
   useEffect(() => {
     if (rawAssets === undefined) { return; }
     let newAssets = [];
+    let allCoins = Object.values(coins);
     for (let i = 0; i < rawAssets.length; i++) {
       // TODO: This is a hack to get the price to display correctly. Need to figure out why the price is off by 10^10
-      const priceDenominator = 10 ** (rawAssets[i].decimals.toNumber() - 10);
+      console.log("decimals", rawAssets[i].decimals.toNumber());
+      const extraDecimals = rawAssets[i].decimals.toNumber() - 8;
       const proportionDenominator = 10 ** 2;
+      const coin = allCoins.filter((token) => {
+        return (token.address === rawAssets[i].token);
+      })[0];
       newAssets.push({
-        coin: Object.values(coins).filter((token) => {
-          return (token.address = rawAssets[i].token);
-        })[0],
-        amount: rawAssets[i].amount.div(10 ** 15).div(10 ** 3).toNumber(),
+        coin,
+        amount: rawAssets[i].amount.div(10 ** 8).div(10 ** extraDecimals).toNumber(),
         price:
-          rawAssets[i].price.div(priceDenominator).toNumber(),
+          rawAssets[i].price.div(10 ** 8).toNumber(),
         proportion: rawAssets[i].proportion.toNumber() / proportionDenominator,
         balance: rawAssets[i].balance.div(10 ** 15).div(10 ** 11).toNumber(),
       });
     }
-    console.log("newAssets", newAssets);
+    console.log("newAssets", coins);
     setAssets(newAssets);
   }, [rawAssets]);
     

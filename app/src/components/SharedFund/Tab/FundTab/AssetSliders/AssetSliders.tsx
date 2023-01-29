@@ -4,6 +4,7 @@ import RangeSlider from "react-range-slider-input";
 import "react-range-slider-input/dist/style.css";
 import "./AssetSliders.scss";
 import { sharedFundContract } from "../../../../../App";
+import { Asset } from "../../../../../hooks/useAssets";
 
 async function changeAssets(currentAssets, newAssets, onClose) {
     console.log(currentAssets, newAssets);
@@ -17,9 +18,10 @@ async function changeAssets(currentAssets, newAssets, onClose) {
         return currentAssets.every((a) => a.coin.symbol !== asset.coin.symbol);
     });
     // get elements that are in both but have different proportions
-    const toChange = newAssets.filter((asset) => {
-        const currentAsset = currentAssets.filter((a) => a.coin.symbol === asset.coin.symbol)[0];
-        return currentAsset.proportion !== asset.proportion;
+    const toChange = currentAssets.filter((asset) => {
+        if (asset.coin.symbol === "WETH") return false;
+        const possibleAsset = newAssets.filter((a) => a.coin.symbol === asset.coin.symbol);
+        return possibleAsset.length === 1 && possibleAsset[0].proportion !== asset.proportion;
     });
     console.log(toRemove, toAdd, toChange);
     // remove elements
@@ -42,7 +44,7 @@ async function changeAssets(currentAssets, newAssets, onClose) {
             ...sharedFundContract,
             mode: 'recklesslyUnprepared',
             functionName: 'addAsset',
-            args: [asset.coin.address, asset.proportion, asset.coin.feed],
+            args: [asset.coin.address, asset.proportion * 100, asset.coin.feed],
         });
         console.log("hash", hash);
         transactionsHashes.push(hash);
@@ -54,23 +56,24 @@ async function changeAssets(currentAssets, newAssets, onClose) {
             ...sharedFundContract,
             mode: 'recklesslyUnprepared',
             functionName: 'changeAssetProportion',
-            args: [asset.coin.address, asset.proportion],
+            args: [asset.coin.address, asset.proportion * 100],
         });
         transactionsHashes.push(hash);
     });
     onClose();
 }
 
-function AssetSliders(props) {
+function AssetSliders({ currentAssets, newAssets, onClose}: { currentAssets: Asset[], newAssets?: Asset[], onClose: any }) {
   const [proportions, setProportions] = React.useState([]);
   const [disabled, setDisabled] = React.useState(false);
 
   useEffect(() => {
-    const _proportions = Object.values(props.assets).map((asset) => { return Object.assign({}, asset); });
+    const assets = newAssets ?? currentAssets;
+    const _proportions = Object.values(assets).map((asset) => { return Object.assign({}, asset); });
     
     setProportions(_proportions);
     checkTotal(_proportions);
-  }, [props.assets]);
+  }, []);
 
   const checkTotal = (assets) => {
     let total = 0;
@@ -112,7 +115,7 @@ function AssetSliders(props) {
       })}
       <button
         className="main-button"
-        onClick={async () => await changeAssets(props.assets, proportions, props.onClose)}
+        onClick={async () => await changeAssets(currentAssets, proportions, onClose)}
         disabled={disabled}
       >
         Change Proportions
