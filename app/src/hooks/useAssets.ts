@@ -2,6 +2,7 @@ import { readContract, watchReadContract } from "@wagmi/core";
 import { sharedFundContract } from "../App";
 
 import { useState, useEffect } from "react";
+import { useContractRead } from "wagmi";
 
 export interface Asset {
   coin: Coin;
@@ -63,21 +64,15 @@ export function useAssets(): Asset[] {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [disposables, setDisposables] = useState([]);
 
-  function dispose(replaceDisposables) {
-    disposables.forEach((unwatch) => unwatch());
-    setDisposables(replaceDisposables);
-  }
+  let getAssetsConfig = {
+    ...sharedFundContract,
+    functionName: "getAssets",
+  };
 
-  async function loadAssets(rawAssets?: any) {
-    if (rawAssets === undefined) {
-      let getAssetsConfig = {
-        ...sharedFundContract,
-        functionName: "getAssets",
-      };
-      rawAssets = await readContract(getAssetsConfig);
-      const unwatch = watchReadContract(getAssetsConfig, loadAssets);
-      dispose([unwatch]);
-    }
+  const { data: rawAssets }: any = useContractRead(getAssetsConfig);
+
+  useEffect(() => {
+    if (rawAssets === undefined) { return; }
     let newAssets = [];
     for (let i = 0; i < rawAssets.length; i++) {
       // TODO: This is a hack to get the price to display correctly. Need to figure out why the price is off by 10^10
@@ -96,11 +91,7 @@ export function useAssets(): Asset[] {
     }
     console.log("newAssets", newAssets);
     setAssets(newAssets);
-  }
-
-  useEffect(() => {
-    loadAssets();
-  }, []);
-
+  }, [rawAssets]);
+    
   return assets;
 }

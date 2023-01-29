@@ -6,6 +6,7 @@ import "./InvestTab.scss";
 import Modal from "../../../Modal/Modal";
 import { Deposit } from "../../../Modal/Deposit/Deposit";
 import { getAccount } from "@wagmi/core";
+import { Withdraw } from "../../../Modal/Withdraw/Withdraw";
 
 function InvestTab({ fund }) {
   const [fundBalance, setFundBalance] = useState(0);
@@ -118,13 +119,13 @@ function InvestTab({ fund }) {
           <Deposit tokenId={tokenId} />
         </Modal>
 
-        {/* <Modal
+        <Modal
           title={"Withdraw"}
           isOpen={modalWithdraw}
           onClose={() => setModalWithdraw(false)}
         >
-          <Transaction functionName={"withdraw"} />
-        </Modal> */}
+          <Withdraw tokenId={tokenId} />
+        </Modal>
       </div>
     </div>
   );
