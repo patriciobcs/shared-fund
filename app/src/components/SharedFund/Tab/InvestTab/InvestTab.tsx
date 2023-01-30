@@ -34,6 +34,7 @@ function InvestTab({ fund }) {
 
       if (currentOwner.share > 0) {
         fund.assets.forEach((a) => {
+          if (a.balance === 0) return;
           data.push({
             title: a.coin.symbol,
             value: a.balance * currentOwner.share / 100,
@@ -59,7 +60,7 @@ function InvestTab({ fund }) {
           <PieChart
             data={pieData}
             label={({ dataEntry }) =>
-              dataEntry.title + " $" + dataEntry.value + ""
+              dataEntry.title + " $" + dataEntry.value.toFixed(0) + ""
             }
             labelStyle={(index) => ({
               fontSize: "0.20rem",
@@ -70,7 +71,7 @@ function InvestTab({ fund }) {
             labelPosition={60}
             lineWidth={20}
           />
-          <h2> Your Balance: ${fundBalance * percentage / 100} USD </h2>
+          <h2> Your Balance: ${(fundBalance * percentage / 10 ** 2).toFixed(0)} USD </h2>
         </div>
 
         <div className="fund-tab__side-tab">
@@ -78,7 +79,7 @@ function InvestTab({ fund }) {
           {isMember ? (
             <div className="vertical-list">
               <label>Fund Percentage: {percentage}%</label>
-              <label>Your Investment: ${investment}</label>
+              <label>Your Investment: ${investment.toFixed(0)} USD</label>
               {/* <label>ROI: {(roi * 100).toFixed(2)}% </label> */}
             </div>
           ) : (

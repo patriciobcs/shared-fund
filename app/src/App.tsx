@@ -2,8 +2,7 @@ import React from "react";
 import Home from "./components/Home/Home";
 import SharedFund from "./components/SharedFund/SharedFund";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { WagmiConfig, createClient, Address, mainnet, Chain } from "wagmi";
-import { localhost } from "wagmi/chains";
+import { WagmiConfig, createClient, Address, mainnet, Chain, goerli } from "wagmi";
 import { ConnectKitProvider, getDefaultClient } from "connectkit";
 import contract from "./assets/contracts/Portfolio.json";
 import deployment from "./assets/contracts/run-latest.json";
@@ -15,6 +14,7 @@ export const sharedFundContract = {
 
 export const forkMainnet: Chain = {
   ...mainnet,
+  name: "Forked Mainnet",
   rpcUrls: {
     default: { http: ['http://localhost:8545'] },
     public: { http: ['http://localhost:8545'] },
@@ -24,7 +24,7 @@ export const forkMainnet: Chain = {
 const client = createClient(
   getDefaultClient({
     appName: "Shared Fund",
-    chains: [forkMainnet],
+    chains: [forkMainnet, goerli],
   })
 );
 

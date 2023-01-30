@@ -18,9 +18,9 @@ async function changeAssets(currentAssets, newAssets, onClose) {
         return currentAssets.every((a) => a.coin.symbol !== asset.coin.symbol);
     });
     // get elements that are in both but have different proportions
-    const toChange = currentAssets.filter((asset) => {
+    const toChange = newAssets.filter((asset) => {
         if (asset.coin.symbol === "WETH") return false;
-        const possibleAsset = newAssets.filter((a) => a.coin.symbol === asset.coin.symbol);
+        const possibleAsset = currentAssets.filter((a) => a.coin.symbol === asset.coin.symbol);
         return possibleAsset.length === 1 && possibleAsset[0].proportion !== asset.proportion;
     });
     console.log(toRemove, toAdd, toChange);

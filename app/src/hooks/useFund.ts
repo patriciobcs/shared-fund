@@ -22,11 +22,23 @@ export function useFund(): Fund {
   const [owners, setOwners] = useState<Owner[]>([]);
   const assets = useAssets();
 
-  let getOwnersConfig = {
+  useContractRead({
     ...sharedFundContract,
     functionName: 'getOwners',
-  };
-  const { data: rawOwners }: any = useContractRead(getOwnersConfig);
+    watch: true,
+    onSuccess(rawOwners: any) {
+      let newOwners = [];
+      for (let newOwner of rawOwners) {
+        newOwners.push({
+          name: newOwner.owner.toString(),
+          address: newOwner.owner.toString(),
+          tokenId: newOwner.tokenId.toString(),
+          share: (newOwner.share.toNumber() / 10 ** 2).toFixed(0),
+        });
+      }
+      setOwners(newOwners);
+    }
+  });
 
   useEffect(() => {
     let newTotalInvestment = assets.reduce((total, asset) => {
@@ -34,20 +46,6 @@ export function useFund(): Fund {
     }, 0);
     setTotalInvestment(newTotalInvestment);
   }, [assets]);
-
-  useEffect(() => {
-    let newOwners = [];
-    for (let newOwner of rawOwners) {
-      newOwners.push({
-        name: newOwner.owner.toString(),
-        address: newOwner.owner.toString(),
-        tokenId: newOwner.tokenId.toString(),
-        share: newOwner.share.div(10 ** 2).toNumber(),
-      });
-    }
-    console.log("newOwners", newOwners);
-    setOwners(newOwners);
-  }, [rawOwners]);
 
   return {
     totalInvestment,
