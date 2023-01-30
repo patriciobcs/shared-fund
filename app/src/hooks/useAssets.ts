@@ -83,7 +83,7 @@ export function useAssets(): Asset[] {
           coin,
           amount: (decimals > 10 ? rawAssets[i].amount.div(10 ** 10) : rawAssets[i].amount.toNumber()) / 10 ** extraDecimals,
           price:
-            rawAssets[i].price.div(10 ** 8).toNumber(),
+            rawAssets[i].price.toNumber() / 10 ** 8,
           proportion: rawAssets[i].proportion.toNumber() / proportionDenominator,
           balance: (decimals > 10 ? rawAssets[i].balance.div(10 ** 10).div(10 ** 8).toNumber() : rawAssets[i].balance.div(10 ** 8).toNumber()) / 10 ** extraDecimals,
         });

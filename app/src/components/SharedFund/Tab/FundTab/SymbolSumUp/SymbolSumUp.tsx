@@ -23,7 +23,7 @@ function SymbolSumUp(props){
                     <tr key={index}>
                         <td>{index+1}</td>
                         <td>{asset.coin.label} <label className="sumup__symbol">{asset.coin.symbol}</label></td>
-                        <td>{asset.price} $</td>
+                        <td>{asset.price.toFixed(3)} $</td>
                         <td>{asset.amount}</td>
                         <td>{asset.balance.toFixed(0)} $</td>
                         <td>{(100*asset.balance/(props.balance || 1)).toFixed(2)} %</td>
