@@ -6,20 +6,38 @@ Your share in a Portfolio is represented as a NFT that can be transfer. You can 
 
 The Portfolio is rebalanced using Chainlink to determine the moment and Uniswap to execute the swap.
 
+## Specification
+
 ```mermaid
 sequenceDiagram
-    actor Founder
+    actor Owner
     participant Contract
-    Note over Founder : Initialize Portfolio
-    Founder ->> Contract : deposit()
-    Note over Founder : Add first token
-    Founder ->> Contract : add_token(token_address, token_share)
-    Contract ->> Chainlink : get_token_price()
-    Chainlink ->> Contract : token_price
-    Contract ->> Uniswap : swap_token()
+    Note over Owner : Initialize Portfolio
+    Owner ->> Contract : deploy()
+    Note over Owner : Auto invite to the Portfolio  
+    Owner ->> Contract : invite()
+    Note over Owner : Add ETH to the Portfolio
+    Owner ->> Contract : deposit()
+    Note over Owner : Add WBTC to the Portfolio
+    Owner ->> Contract : add_asset(token_address, proportion)
+    Note over Owner : Change assets proportions
+    Owner ->> Contract : change_proportions(token_address, proportion)
+    Note over Owner : Rebalance to the Portfolio
+    Owner ->> Contract : rebalance()
+    loop Rebalance each token
+        Contract ->> Chainlink : get_token_price()
+        Chainlink ->> Contract : token_price
+        Contract ->> Uniswap : swap_token()
+    end
+    Note over Owner : Invite new Owner to the Portfolio
+    Owner ->> Contract : invite()
+    Note over Owner : Withdraw from the Portfolio
+    Owner ->> Contract : withdraw()
 ```
 
-## Contract
+## Design
+
+### Smart Contrcat
 
 ![graph](resources/graph.png)
 
