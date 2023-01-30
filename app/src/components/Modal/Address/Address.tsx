@@ -6,7 +6,7 @@ import {
 import { sharedFundContract } from "../../../App";
 import { useState } from "react";
 
-export function Invite() {
+export function Address(props) {
   const [address, setAddress] = useState("0x");
   const isAddress = address.length === 42;
 
@@ -16,7 +16,7 @@ export function Invite() {
     isError: isPrepareError,
   } = usePrepareContractWrite({
     ...sharedFundContract,
-    functionName: "invite",
+    functionName: props.functionName,
     args: [address],
     enabled: isAddress,
   });

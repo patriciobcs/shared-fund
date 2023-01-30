@@ -10,7 +10,7 @@ import "../Tab.scss";
 import "./FundTab.scss";
 import CoinChooser from "./CoinChooser/CoinChooser";
 import ConfirmModal from "../../../Modal/ConfirmModal/ConfirmModal";
-import { Invite } from "../../../Modal/Invite/Invite";
+import { Address } from "../../../Modal/Address/Address";
 
 function FundTab({ fund }) {
   const [modalPercentage, setModalPercentage] = useState(false);
@@ -123,7 +123,7 @@ function FundTab({ fund }) {
         isOpen={modalOwner}
         onClose={() => setModalOwner(false)}
       >
-        <Invite />
+        <Address functionName={"invite"} />
       </Modal>
 
       <ConfirmModal
