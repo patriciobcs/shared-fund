@@ -10,7 +10,7 @@ import "../Tab.scss";
 import "./FundTab.scss";
 import CoinChooser from "./CoinChooser/CoinChooser";
 import ConfirmModal from "../../../Modal/ConfirmModal/ConfirmModal";
-import { Invite } from "../../../Modal/Invite/Invite";
+import { Address } from "../../../Modal/Address/Address";
 import Rebalance from "../../../Modal/Rebalance/Rebalance";
 
 function FundTab({ fund }) {
@@ -125,7 +125,7 @@ function FundTab({ fund }) {
         isOpen={modalOwner}
         onClose={() => setModalOwner(false)}
       >
-        <Invite />
+        <Address functionName={"invite"} />
       </Modal>
 
       <Rebalance

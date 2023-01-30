@@ -7,6 +7,7 @@ import Modal from "../../../Modal/Modal";
 import { Deposit } from "../../../Modal/Deposit/Deposit";
 import { getAccount } from "@wagmi/core";
 import { Withdraw } from "../../../Modal/Withdraw/Withdraw";
+import {Address} from "../../../Modal/Address/Address";
 
 function InvestTab({ fund }) {
   const [fundBalance, setFundBalance] = useState(0);
@@ -16,6 +17,7 @@ function InvestTab({ fund }) {
   const [percentage, setPercentage] = useState(0);
   const [modalDeposit, setModalDeposit] = useState(false);
   const [modalWithdraw, setModalWithdraw] = useState(false);
+  const [modalShares, setModalShares] = useState(false);
   const [tokenId, setTokenId] = useState(null);
 
   const isMember = tokenId !== null;
@@ -106,7 +108,12 @@ function InvestTab({ fund }) {
             >
               Withdraw
             </button>
-            <button disabled={!isMember} className="main-button">
+            <button
+                disabled={!isMember}
+                onClick={() => {
+                  setModalShares(true)
+                }}
+                className="main-button">
               Sell Shares
             </button>
           </div>
@@ -126,6 +133,14 @@ function InvestTab({ fund }) {
           onClose={() => setModalWithdraw(false)}
         >
           <Withdraw tokenId={tokenId} />
+        </Modal>
+
+        <Modal
+            title={"Sell your shares to someone"}
+            isOpen={modalShares}
+            onClose={() => setModalShares(false)}
+        >
+          <Address functionName={"transferShares"} />
         </Modal>
       </div>
     </div>
