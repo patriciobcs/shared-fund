@@ -19,43 +19,18 @@ sequenceDiagram
     Contract ->> Uniswap : swap_token()
 ```
 
+## Contract
+
+![graph](resources/graph.png)
+
 ## Stack
 
-- Foundry
+- Foundry / Anvil
 - WAGMI (React)
 - Chainlink
 - Uniswap
+- OpenZeppelin
 - Solidity
-
-## APIs
-
-The following are the methods available in the contract. All the method pointed with majority emit events.
-
-```solidity
-invite(address) //  only majority shareholders
-
-deposit() // only shareholders
-
-getTokenPrice() 
-
-rebalance() // only majority shareholders
-
-update_repartition() // only majority shareholders
-
-add_token()
-
-add_token_auto_rebalance()
-
-remove_token()
-
-remove_token_auto_rebalance()
-
-copy()
-
-sell_share()
-
-withdraw()
-```
 
 ## Quickstart
 
