@@ -34,6 +34,7 @@ function InvestTab({ fund }) {
 
       if (currentOwner.share > 0) {
         fund.assets.forEach((a) => {
+          if (a.balance === 0) return;
           data.push({
             title: a.coin.symbol,
             value: a.balance * currentOwner.share / 100,

@@ -25,6 +25,7 @@ function FundTab({ fund }) {
     const data = [];
     let balance = 0;
     fund.assets.forEach((a) => {
+      if (a.balance === 0) return;
       balance += a.balance;
       data.push({
         title: a.coin.symbol,
