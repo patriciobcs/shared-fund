@@ -114,7 +114,7 @@ function InvestTab({ fund }) {
                   setModalShares(true)
                 }}
                 className="main-button">
-              Sell Shares
+              Transfer Shares
             </button>
           </div>
         </div>
