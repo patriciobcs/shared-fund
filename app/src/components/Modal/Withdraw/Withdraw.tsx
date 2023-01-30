@@ -4,7 +4,7 @@ import {
   useWaitForTransaction,
 } from "wagmi";
 import { sharedFundContract } from "../../../App";
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { ethers } from "ethers";
 
 export function Withdraw({ tokenId }) {
@@ -19,7 +19,7 @@ export function Withdraw({ tokenId }) {
   } = usePrepareContractWrite({
     ...sharedFundContract,
     functionName: "withdraw",
-    args: [tokenId, isEnabled ? ethers.utils.parseEther(amount).div(10 ** 15) : 1],
+    args: [tokenId, isEnabled ? parseInt(amount)*100 : 1],
     enabled: isEnabled
   });
   const { data, error, isError, write } = useContractWrite(config);
@@ -29,7 +29,7 @@ export function Withdraw({ tokenId }) {
 
   return (
     <div className="vertical-list">
-      <label>Amount</label>
+      <label>Percentage</label>
       <input
         disabled={isLoading}
         type="number"
@@ -54,7 +54,7 @@ export function Withdraw({ tokenId }) {
         {(isPrepareError || isError) && (
           <label className="warning">
             {" "}
-            Error: {(prepareError || error)?.message.split(";")[0]}
+            Error: {(prepareError || error)?.message?.split(";")[0]}
           </label>
         )}
       </div>

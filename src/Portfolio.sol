@@ -380,7 +380,8 @@ contract Portfolio is Ownable, SharedFund {
                 usdDifference = tokenValue - requiredValue;
                 // We need to sell some of this asset
                 uint256 soldAssetAmount = (usdDifference * 10 ** tokenDecimals / tokenPrice);
-                swapAsset(tokens[i], soldAssetAmount, false, tokenPrice);
+                // TODO calculate minOut here
+                swapAsset(tokens[i], soldAssetAmount, false, 10);
             }
         }
 
@@ -389,6 +390,7 @@ contract Portfolio is Ownable, SharedFund {
                 continue;
             }
             uint256 amount = orders[i].amount;
+            // TODO calculate minOut here
             swapAsset(tokens[i], amount, true, 10);
         }
     }

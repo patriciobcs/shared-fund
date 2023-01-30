@@ -40,9 +40,9 @@ contract SharedFund is ERC721 {
         return newItemId;
     }
 
-    function transferShares(address to) public{
+    function transferShares(address to) public {
         uint256 tokenId = tokenIdOf(msg.sender);
-        require(tokenId> 0, "ERC721: caller is not token owner");
+        require(tokenId > 0, "ERC721: caller is not token owner");
         require(tokenIdOf(to) == 0, "The receiver already has shares");
 
         transferFrom(msg.sender, to, tokenId);
@@ -50,6 +50,7 @@ contract SharedFund is ERC721 {
     /**
      * @dev See {IERC721-transferFrom}.
      */
+
     function transferFrom(address from, address to, uint256 tokenId) public virtual override {
         //solhint-disable-next-line max-line-length
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
@@ -58,7 +59,7 @@ contract SharedFund is ERC721 {
 
         //Update list and map
         delete owners[from];
-        for (uint i = 0; i < ownersList.length; i++) {
+        for (uint256 i = 0; i < ownersList.length; i++) {
             if (ownersList[i] == from) {
                 ownersList[i] = to;
                 break;
@@ -78,7 +79,7 @@ contract SharedFund is ERC721 {
         for (uint256 i = 0; i < ownersList.length; i++) {
             ownersData[i].owner = ownersList[i];
             ownersData[i].tokenId = tokenIdOf(ownersData[i].owner);
-            ownersData[i].share = shareOf(ownersData[i].tokenId );
+            ownersData[i].share = shareOf(ownersData[i].tokenId);
         }
         return ownersData;
     }
