@@ -1,6 +1,6 @@
 import { sharedFundContract } from "../App";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useContractRead } from "wagmi";
 
 export interface Asset {
@@ -62,37 +62,34 @@ export const coins: { [key: string]: Coin } = {
 export function useAssets(): Asset[] {
   const [assets, setAssets] = useState<Asset[]>([]);
 
-  let getAssetsConfig = {
+  useContractRead({
     ...sharedFundContract,
     functionName: "getAssets",
-  };
+    watch: true,
+    onSuccess(rawAssets: any) {
+      let newAssets = [];
+      let allCoins = Object.values(coins);
+      for (let i = 0; i < rawAssets.length; i++) {
+        // TODO: This is a hack to get the price to display correctly. Need to figure out why the price is off by 10^10
+        console.log("decimals", rawAssets[i].decimals.toNumber());
+        const extraDecimals = rawAssets[i].decimals.toNumber() - 8;
+        const proportionDenominator = 10 ** 2;
+        const coin = allCoins.filter((token) => {
+          return (token.address === rawAssets[i].token);
+        })[0];
+        newAssets.push({
+          coin,
+          amount: rawAssets[i].amount.div(10 ** 8).div(10 ** extraDecimals).toNumber(),
+          price:
+            rawAssets[i].price.div(10 ** 8).toNumber(),
+          proportion: rawAssets[i].proportion.toNumber() / proportionDenominator,
+          balance: rawAssets[i].balance.div(10 ** 15).div(10 ** 11).toNumber(),
+        });
+      }
+      console.log("newAssets", coins);
+      setAssets(newAssets); 
+    },
+  });
 
-  const { data: rawAssets }: any = useContractRead(getAssetsConfig);
-
-  useEffect(() => {
-    if (rawAssets === undefined) { return; }
-    let newAssets = [];
-    let allCoins = Object.values(coins);
-    for (let i = 0; i < rawAssets.length; i++) {
-      // TODO: This is a hack to get the price to display correctly. Need to figure out why the price is off by 10^10
-      console.log("decimals", rawAssets[i].decimals.toNumber());
-      const extraDecimals = rawAssets[i].decimals.toNumber() - 8;
-      const proportionDenominator = 10 ** 2;
-      const coin = allCoins.filter((token) => {
-        return (token.address === rawAssets[i].token);
-      })[0];
-      newAssets.push({
-        coin,
-        amount: rawAssets[i].amount.div(10 ** 8).div(10 ** extraDecimals).toNumber(),
-        price:
-          rawAssets[i].price.div(10 ** 8).toNumber(),
-        proportion: rawAssets[i].proportion.toNumber() / proportionDenominator,
-        balance: rawAssets[i].balance.div(10 ** 15).div(10 ** 11).toNumber(),
-      });
-    }
-    console.log("newAssets", coins);
-    setAssets(newAssets);
-  }, [rawAssets]);
-    
   return assets;
 }
