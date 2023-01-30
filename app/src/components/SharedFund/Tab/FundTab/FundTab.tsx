@@ -11,6 +11,7 @@ import "./FundTab.scss";
 import CoinChooser from "./CoinChooser/CoinChooser";
 import ConfirmModal from "../../../Modal/ConfirmModal/ConfirmModal";
 import { Address } from "../../../Modal/Address/Address";
+import Rebalance from "../../../Modal/Rebalance/Rebalance";
 
 function FundTab({ fund }) {
   const [modalPercentage, setModalPercentage] = useState(false);
@@ -24,6 +25,7 @@ function FundTab({ fund }) {
     const data = [];
     let balance = 0;
     fund.assets.forEach((a) => {
+      if (a.balance === 0) return;
       balance += a.balance;
       data.push({
         title: a.coin.symbol,
@@ -60,7 +62,7 @@ function FundTab({ fund }) {
             labelPosition={60}
             lineWidth={20}
           />
-          <h2> Fund Balance: ${fundBalance} USD </h2>
+          <h2> Fund Balance: ${fundBalance.toFixed(0)} USD </h2>
         </div>
 
         <div className="fund-tab__side-tab vertical-list">
@@ -126,10 +128,10 @@ function FundTab({ fund }) {
         <Address functionName={"invite"} />
       </Modal>
 
-      <ConfirmModal
+      <Rebalance
         modalOpen={rebalanceModal}
         setOpen={setRebalanceModal}
-      ></ConfirmModal>
+      ></Rebalance>
     </div>
   );
 }

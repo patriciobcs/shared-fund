@@ -30,7 +30,7 @@
     "eject": "react-scripts eject",
     "get-contract": "cp ../out/Portfolio.sol/Portfolio.json src/assets/contracts/",
     "get-deployment": "cp ../broadcast/Portfolio.s.sol/1/run-latest.json src/assets/contracts/",
-    "setup": "yarn get-contract && yarn get-deployment",
+    "setup": "mkdir -p src/assets/contracts/ && yarn get-contract && yarn get-deployment",
     "dev": "yarn setup && yarn start"
   },
   "eslintConfig": {
