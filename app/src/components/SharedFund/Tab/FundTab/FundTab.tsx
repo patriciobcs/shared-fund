@@ -11,6 +11,7 @@ import "./FundTab.scss";
 import CoinChooser from "./CoinChooser/CoinChooser";
 import ConfirmModal from "../../../Modal/ConfirmModal/ConfirmModal";
 import { Invite } from "../../../Modal/Invite/Invite";
+import Rebalance from "../../../Modal/Rebalance/Rebalance";
 
 function FundTab({ fund }) {
   const [modalPercentage, setModalPercentage] = useState(false);
@@ -126,10 +127,10 @@ function FundTab({ fund }) {
         <Invite />
       </Modal>
 
-      <ConfirmModal
+      <Rebalance
         modalOpen={rebalanceModal}
         setOpen={setRebalanceModal}
-      ></ConfirmModal>
+      ></Rebalance>
     </div>
   );
 }

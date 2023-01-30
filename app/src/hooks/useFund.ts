@@ -36,7 +36,6 @@ export function useFund(): Fund {
           share: newOwner.share.div(10 ** 2).toNumber(),
         });
       }
-      console.log("newOwners", newOwners);
       setOwners(newOwners);
     }
   });

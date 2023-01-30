@@ -86,7 +86,6 @@ export function useAssets(): Asset[] {
           balance: rawAssets[i].balance.div(10 ** 15).div(10 ** 11).toNumber(),
         });
       }
-      console.log("newAssets", coins);
       setAssets(newAssets); 
     },
   });
