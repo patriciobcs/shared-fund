@@ -33,7 +33,7 @@ export function useFund(): Fund {
           name: newOwner.owner.toString(),
           address: newOwner.owner.toString(),
           tokenId: newOwner.tokenId.toString(),
-          share: newOwner.share.div(10 ** 2).toNumber(),
+          share: (newOwner.share.toNumber() / 10 ** 2).toFixed(0),
         });
       }
       setOwners(newOwners);

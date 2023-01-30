@@ -61,7 +61,7 @@ function FundTab({ fund }) {
             labelPosition={60}
             lineWidth={20}
           />
-          <h2> Fund Balance: ${fundBalance} USD </h2>
+          <h2> Fund Balance: ${fundBalance.toFixed(0)} USD </h2>
         </div>
 
         <div className="fund-tab__side-tab vertical-list">

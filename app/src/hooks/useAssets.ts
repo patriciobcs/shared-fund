@@ -67,24 +67,27 @@ export function useAssets(): Asset[] {
     functionName: "getAssets",
     watch: true,
     onSuccess(rawAssets: any) {
+      console.log("rawAssets", rawAssets);
       let newAssets = [];
       let allCoins = Object.values(coins);
       for (let i = 0; i < rawAssets.length; i++) {
         // TODO: This is a hack to get the price to display correctly. Need to figure out why the price is off by 10^10
         console.log("decimals", rawAssets[i].decimals.toNumber());
-        const extraDecimals = rawAssets[i].decimals.toNumber() - 8;
+        const decimals = rawAssets[i].decimals.toNumber();
+        const extraDecimals = decimals > 10 ? decimals - 10 : decimals;
         const proportionDenominator = 10 ** 2;
         const coin = allCoins.filter((token) => {
           return (token.address === rawAssets[i].token);
         })[0];
         newAssets.push({
           coin,
-          amount: rawAssets[i].amount.div(10 ** 8).div(10 ** extraDecimals).toNumber(),
+          amount: (decimals > 10 ? rawAssets[i].amount.div(10 ** 10) : rawAssets[i].amount.toNumber()) / 10 ** extraDecimals,
           price:
             rawAssets[i].price.div(10 ** 8).toNumber(),
           proportion: rawAssets[i].proportion.toNumber() / proportionDenominator,
-          balance: rawAssets[i].balance.div(10 ** 15).div(10 ** 11).toNumber(),
+          balance: (decimals > 10 ? rawAssets[i].balance.div(10 ** 10).div(10 ** 8).toNumber() : rawAssets[i].balance.div(10 ** 8).toNumber()) / 10 ** extraDecimals,
         });
+        console.log("newAssets", newAssets);
       }
       setAssets(newAssets); 
     },
