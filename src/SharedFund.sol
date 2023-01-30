@@ -3,8 +3,9 @@ pragma solidity ^0.8.14;
 
 import "openzeppelin-contracts/utils/Counters.sol";
 import "openzeppelin-contracts/token/ERC721/ERC721.sol";
+import "openzeppelin-contracts/access/Ownable.sol";
 
-contract SharedFund is ERC721 {
+contract SharedFund is Ownable, ERC721 {
     using Counters for Counters.Counter;
 
     Counters.Counter private tokenIds;
@@ -21,7 +22,7 @@ contract SharedFund is ERC721 {
     /// @notice invites a user to join the fund
     /// @param user the address of the user to invite
     /// @return the token ID of the newly minted token
-    function invite(address user) public returns (uint256) {
+    function invite(address user) public onlyOwner returns (uint256) {
         //TODO verify signatures
         require(balanceOf(user) == 0, "User already a member");
         return _mint(user);

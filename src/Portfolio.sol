@@ -2,7 +2,6 @@
 pragma solidity ^0.8.14;
 
 import "./PriceFeedConsumer.sol";
-import "openzeppelin-contracts/access/Ownable.sol";
 import "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./SharedFund.sol";
 import "uniswap-v3-periphery/contracts/libraries/TransferHelper.sol";
@@ -14,7 +13,7 @@ import "./interfaces/external/IWETH9.sol";
  * @title The Portfolio contract
  * @notice A contract to manage a portfolio of assets
  */
-contract Portfolio is Ownable, SharedFund {
+contract Portfolio is SharedFund {
     using PercentageMath for uint256;
 
     /// @dev An asset in the portfolio represented by its share and flexibility
@@ -70,7 +69,7 @@ contract Portfolio is Ownable, SharedFund {
 
     /* ---------------------------- CONSTRUCTOR ---------------------------- */
 
-    /// @dev The constructor
+    /// @dev The constructor also mints the initial NFT for the deployer.
     /// @param _weth The address of the WETH contract
     /// @param _swapRouter The address of the Uniswap V3 router
     /// @param _priceFeed The address of the price feed contract for the base currency (WETH)
@@ -86,6 +85,8 @@ contract Portfolio is Ownable, SharedFund {
         assets[_weth].active = true;
         // 100% expressed in bps
         tokens.push(_weth);
+
+        _mint(msg.sender);
     }
 
     /// @dev Receive function to allow the contract to receive ETH.
