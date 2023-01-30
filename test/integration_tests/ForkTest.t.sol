@@ -19,6 +19,7 @@ contract ForkTest is TestForkSetup {
     //      the portfolio should have 1/2 * 1600 / 1 = 800 USDC.
     function testFiftyEthFiftyUSDC() public {
         deposit(user1, 1, 1 ether);
+        vm.startPrank(user1);
         portfolio.addAsset(USDC, 5_000, address(assets[USDC].aggregator));
         uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
         assertEq(usdcBalance, 0);
@@ -30,5 +31,6 @@ contract ForkTest is TestForkSetup {
             (1 * uint256(ethPrice) / uint256(usdcPrice)) * (10 ** usdcDecimals) * 5000 / PERCENTAGE_FACTOR;
         assertGe(usdcBalance, expectedUsdcBalance * 9 / 10);
         assertLe(usdcBalance, expectedUsdcBalance * 11 / 10);
+        vm.stopPrank();
     }
 }

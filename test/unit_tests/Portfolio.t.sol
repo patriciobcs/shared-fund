@@ -17,6 +17,8 @@ contract PortfolioTest is TestSetup {
         assertTrue(portfolioValue == 0);
 
         deposit(user1, 1, 1 ether);
+        vm.startPrank(user1);
+
         wethBalance = IERC20(WETH).balanceOf(address(portfolio));
         assertEq(wethBalance, 1 ether);
         portfolioValue = portfolio.getPortfolioValue();
@@ -29,6 +31,8 @@ contract PortfolioTest is TestSetup {
     ///     The expected value is 2000$ with USDC and BTC prices fixed at 1$ and 20,000$.
     function testGetPortfolioValueMultipleTokens() public {
         deposit(user1, 1, 1 ether);
+        vm.startPrank(user1);
+
         uint256 value = portfolio.getPortfolioValue();
         assertEq(value, 2_000 * PRICEFEED_PRECISION, "Portfolio value should be the sum of all assets");
         portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
@@ -45,6 +49,8 @@ contract PortfolioTest is TestSetup {
     //      USDC is considered to be an 18-decimal token here.
     function testRebalanceBuyOneToken() public {
         deposit(user1, 1, 1 ether);
+        vm.startPrank(user1);
+
         portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
         portfolio.rebalance();
         uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
@@ -61,6 +67,7 @@ contract PortfolioTest is TestSetup {
     //      And 0.25 ether worth of BTC, which is 0.025 btc
     function testRebalanceBuyTwoTokens() public {
         deposit(user1, 1, 1 ether);
+        vm.startPrank(user1);
         portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
         portfolio.addAsset(BTC, 2_500, address(assets[BTC].aggregator));
         portfolio.rebalance();
@@ -79,6 +86,7 @@ contract PortfolioTest is TestSetup {
     function testRebalanceSellOneToken() public {
         // setup
         deposit(user1, 1, 1 ether);
+        vm.startPrank(user1);
         portfolio.addAsset(USDC, 5_000, address(assets[USDC].aggregator));
         portfolio.rebalance();
         uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
@@ -101,6 +109,8 @@ contract PortfolioTest is TestSetup {
     function testRebalanceSellTwoTokens() public {
         // setup
         deposit(user1, 1, 1 ether);
+        vm.startPrank(user1);
+
         portfolio.addAsset(USDC, 2_500, address(assets[USDC].aggregator));
         portfolio.addAsset(BTC, 2_500, address(assets[BTC].aggregator));
         portfolio.rebalance();
@@ -126,6 +136,7 @@ contract PortfolioTest is TestSetup {
     function testRebalanceSellOneBuyOne() public {
         // setup
         deposit(user1, 1, 1 ether);
+        vm.startPrank(user1);
         portfolio.addAsset(USDC, 10_000, address(assets[USDC].aggregator));
         portfolio.rebalance();
         uint256 usdcBalance = IERC20(USDC).balanceOf(address(portfolio));
@@ -141,5 +152,6 @@ contract PortfolioTest is TestSetup {
         assertEq(btcBalance, 25 * 10 ** 15);
         uint256 wethBalance = IERC20(WETH).balanceOf(address(portfolio));
         assertEq(wethBalance, 0.5 ether);
+        vm.stopPrank();
     }
 }

@@ -73,6 +73,7 @@ contract TestForkSetup is Test {
         setAsset(AAVE, 18, aaveUsdPriceFeed);
         setAsset(USDC, 6, usdcUsdPriceFeed);
 
+        vm.prank(user1);
         portfolio = new Portfolio(WETH, swapRouter, address(ethUsdPriceFeed));
         assets[initialToken].proportion = 10_000;
         remainingProportion = 10_000;
@@ -98,9 +99,10 @@ contract TestForkSetup is Test {
     }
 
     function inviteUsers() internal {
-        portfolio.invite(user1);
+        vm.startPrank(user1);
         portfolio.invite(user2);
         portfolio.invite(user3);
+        vm.stopPrank();
     }
 
     function deposit(address user, uint256 tokenId, uint256 amount) public {

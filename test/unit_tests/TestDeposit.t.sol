@@ -41,7 +41,7 @@ contract TestDeposit is TestSetup {
     /// @dev Tests depositing 1 ether into the fund by a user that doesn't own an NFT.
     ///      The invoke should revert.
     function testDepositNotShareOwner() public {
-        vm.expectRevert("CALLER_NOT_OWNER");
+        vm.expectRevert("CALLER_NOT_TOKEN_OWNER");
         deposit(address(0x18023745), 2, 1 ether);
     }
 
