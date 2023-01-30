@@ -55,6 +55,15 @@ contract SharedFund is ERC721 {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
 
         _transfer(from, to, tokenId);
+
+        //Update list and map
+        delete owners[from];
+        for (uint i = 0; i < ownersList.length; i++) {
+            if (ownersList[i] == from) {
+                ownersList[i] = to;
+                break;
+            }
+        }
         owners[to] = tokenId;
     }
 
