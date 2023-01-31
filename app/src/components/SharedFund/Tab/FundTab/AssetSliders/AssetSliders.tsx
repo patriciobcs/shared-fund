@@ -19,11 +19,10 @@ async function changeAssets(currentAssets, newAssets, onClose) {
     });
     // get elements that are in both but have different proportions
     const toChange = newAssets.filter((asset) => {
-        if (asset.coin.symbol === "WETH") return false;
         const possibleAsset = currentAssets.filter((a) => a.coin.symbol === asset.coin.symbol);
         return possibleAsset.length === 1 && possibleAsset[0].proportion !== asset.proportion;
     });
-    console.log(toRemove, toAdd, toChange);
+    console.log({toRemove:toRemove, toAdd:toAdd, toChange:toChange});
     // remove elements
     await toRemove.map(async (asset) => {
         // remove asset from the fund
@@ -51,6 +50,9 @@ async function changeAssets(currentAssets, newAssets, onClose) {
     });
     // change elements
     await toChange.map(async (asset) => {
+      console.log(asset.proportion);
+      console.log(asset.proportion*100)
+      console.log(asset.proportion*10000);
         // change asset in the fund
         const { hash } = await writeContract({
             ...sharedFundContract,

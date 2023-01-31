@@ -79,6 +79,7 @@ contract TestSetup is Test {
         setAsset(USDC, 6, 1);
 
         initialToken = WETH;
+        vm.prank(user1);
         portfolio = new Portfolio(WETH, address(mockUniV3), address(assets[initialToken].aggregator));
         assets[initialToken].proportion = 10_000;
         remainingProportion = 10_000;
@@ -99,9 +100,10 @@ contract TestSetup is Test {
     }
 
     function inviteUsers() internal {
-        portfolio.invite(user1);
+        vm.startPrank(user1);
         portfolio.invite(user2);
         portfolio.invite(user3);
+        vm.stopPrank();
     }
 
     function deposit(address user, uint256 tokenId, uint256 amount) public {

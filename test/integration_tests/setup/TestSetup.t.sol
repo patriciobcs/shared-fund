@@ -26,7 +26,7 @@ contract TestForkSetup is Test {
     address user2 = address(0x8cedE0C4fA841021E2771ebC6A4c308be26919Fa);
     address user3 = address(0x4960E61111Ce831BCd39b160F94c6921A71E6F58);
     address swapRouter = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-    
+
     address WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address ethUsdPriceFeed = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
     address WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
@@ -73,6 +73,7 @@ contract TestForkSetup is Test {
         setAsset(AAVE, 18, aaveUsdPriceFeed);
         setAsset(USDC, 6, usdcUsdPriceFeed);
 
+        vm.prank(user1);
         portfolio = new Portfolio(WETH, swapRouter, address(ethUsdPriceFeed));
         assets[initialToken].proportion = 10_000;
         remainingProportion = 10_000;
@@ -98,9 +99,10 @@ contract TestForkSetup is Test {
     }
 
     function inviteUsers() internal {
-        portfolio.invite(user1);
+        vm.startPrank(user1);
         portfolio.invite(user2);
         portfolio.invite(user3);
+        vm.stopPrank();
     }
 
     function deposit(address user, uint256 tokenId, uint256 amount) public {

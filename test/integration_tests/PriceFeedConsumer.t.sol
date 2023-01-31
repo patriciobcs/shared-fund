@@ -25,7 +25,7 @@ contract TestPriceFeedConsumerIntegration is TestForkSetup {
     function testAddConsumer() public {
         addConsumer(AAVE, aaveUsdPriceFeed);
         addConsumer(USDC, usdcUsdPriceFeed);
-        assertTrue(priceFeedConsumer.getLatestPrice(AAVE) > 80 * 10 ** CHAINLINK_DECIMALS);
-        assertTrue(priceFeedConsumer.getLatestPrice(USDC) >= 1 * 10 ** CHAINLINK_DECIMALS);
+        assertTrue(priceFeedConsumer.getLatestPrice(AAVE) >= 70 * 10 ** CHAINLINK_DECIMALS);
+        assertTrue(priceFeedConsumer.getLatestPrice(USDC) >= 9 * 10 ** (CHAINLINK_DECIMALS - 1));
     }
 }

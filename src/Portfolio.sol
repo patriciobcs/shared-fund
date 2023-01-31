@@ -2,7 +2,6 @@
 pragma solidity ^0.8.14;
 
 import "./PriceFeedConsumer.sol";
-import "openzeppelin-contracts/access/Ownable.sol";
 import "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./SharedFund.sol";
 import "uniswap-v3-periphery/contracts/libraries/TransferHelper.sol";
@@ -14,7 +13,7 @@ import "./interfaces/external/IWETH9.sol";
  * @title The Portfolio contract
  * @notice A contract to manage a portfolio of assets
  */
-contract Portfolio is Ownable, SharedFund {
+contract Portfolio is SharedFund {
     using PercentageMath for uint256;
 
     /// @dev An asset in the portfolio represented by its share and flexibility
@@ -70,7 +69,7 @@ contract Portfolio is Ownable, SharedFund {
 
     /* ---------------------------- CONSTRUCTOR ---------------------------- */
 
-    /// @dev The constructor
+    /// @dev The constructor also mints the initial NFT for the deployer.
     /// @param _weth The address of the WETH contract
     /// @param _swapRouter The address of the Uniswap V3 router
     /// @param _priceFeed The address of the price feed contract for the base currency (WETH)
@@ -86,6 +85,8 @@ contract Portfolio is Ownable, SharedFund {
         assets[_weth].active = true;
         // 100% expressed in bps
         tokens.push(_weth);
+
+        _mint(msg.sender);
     }
 
     /// @dev Receive function to allow the contract to receive ETH.
@@ -101,7 +102,12 @@ contract Portfolio is Ownable, SharedFund {
     /// @dev Reverts the transaction if the caller is not the token owner
     /// @param _nftId The NFT Id
     modifier onlyTokenOwner(uint256 _nftId) {
-        require(ownerOf(_nftId) == msg.sender, "CALLER_NOT_OWNER");
+        require(ownerOf(_nftId) == msg.sender, "CALLER_NOT_TOKEN_OWNER");
+        _;
+    }
+
+    modifier onlyTokenOwners() {
+        require(owners[msg.sender] > 0, "CALLER_NOT_TOKEN_OWNER");
         _;
     }
 
@@ -168,6 +174,13 @@ contract Portfolio is Ownable, SharedFund {
     }
 
     /* ------------------------------- VIEWS ------------------------------- */
+
+    /// @notice gets the USD price of the base currency (WETH) in the portfolio
+    /// @return the USD price of the base currency (WETH) in the portfolio with 8 decimals of precision.
+    function getBaseCurrencyPrice() public view returns (uint256) {
+        uint256 price = uint256(priceFeeds.getLatestPrice(address(WETH9)));
+        return price;
+    }
 
     /// @notice Returns the total value of the portfolio in USD.
     /// @dev The value is calculated by summing the value of each asset in the portfolio.
@@ -333,7 +346,7 @@ contract Portfolio is Ownable, SharedFund {
     ///      The rebalance is done in 2 steps:
     ///      1. Sell the assets that are above the target proportion.
     ///      2. Buy the assets that are below the target proportion.
-    function rebalance() public {
+    function rebalance() public onlyTokenOwners {
         //TODO refactor this function.
         // What we want to do is :
         // - get the total portfolio value
@@ -380,7 +393,8 @@ contract Portfolio is Ownable, SharedFund {
                 usdDifference = tokenValue - requiredValue;
                 // We need to sell some of this asset
                 uint256 soldAssetAmount = (usdDifference * 10 ** tokenDecimals / tokenPrice);
-                swapAsset(tokens[i], soldAssetAmount, false, tokenPrice);
+                // TODO calculate minOut here
+                swapAsset(tokens[i], soldAssetAmount, false, 10);
             }
         }
 
@@ -389,18 +403,12 @@ contract Portfolio is Ownable, SharedFund {
                 continue;
             }
             uint256 amount = orders[i].amount;
+            // TODO calculate minOut here
             swapAsset(tokens[i], amount, true, 10);
         }
     }
 
     /* ------------------------- PRIVATE FUNCTIONS ------------------------- */
-
-    /// @notice gets the USD price of the base currency (WETH) in the portfolio
-    /// @return the USD price of the base currency (WETH) in the portfolio with 8 decimals of precision.
-    function getBaseCurrencyPrice() private view returns (uint256) {
-        uint256 price = uint256(priceFeeds.getLatestPrice(address(WETH9)));
-        return price;
-    }
 
     /// @notice Sets the unallocated proportion of the portfolio that sits in WETH.
     function setRemainingProportion(uint256 _proportion) internal {

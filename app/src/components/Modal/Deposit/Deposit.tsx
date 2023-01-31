@@ -57,7 +57,7 @@ export function Deposit({ tokenId }) {
         {(isPrepareError || isError) && (
           <label className="warning">
             {" "}
-            Error: {(prepareError || error)?.message.split(";")[0]}
+            Error: {(prepareError || error)?.message?.split(";")[0]}
           </label>
         )}
       </div>
