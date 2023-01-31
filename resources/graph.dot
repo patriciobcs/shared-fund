@@ -1,0 +1,268 @@
+digraph G {
+  graph [ ratio = "auto", page = "100", compound =true, bgcolor = "transparent" ];
+  node [ style = "filled", fillcolor = "#edad56", color = "#edad56", penwidth =3 ];
+  edge [ color = "#fcfcfc", penwidth=2, fontname = "helvetica Neue Ultra Light" ];
+subgraph "clusterPortfolio" {
+  graph [ label = "Portfolio", color = "black", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "black" ];
+  "Portfolio.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.<Receive Ether>" [ label = "<Receive Ether>", color = "brown", fillcolor = "#ffbdb9" ];
+  "Portfolio.onlyTokenOwner" [ label = "onlyTokenOwner", color = "#1bc6a6", shape =doubleoctagon ];
+  "Portfolio.assetExists" [ label = "assetExists", color = "#1bc6a6", shape =doubleoctagon ];
+  "Portfolio.assetDoesNotExist" [ label = "assetDoesNotExist", color = "#1bc6a6", shape =doubleoctagon ];
+  "Portfolio.addAsset" [ label = "addAsset", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.changeAssetProportion" [ label = "changeAssetProportion", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.getPortfolioValue" [ label = "getPortfolioValue", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.getTokens" [ label = "getTokens", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.getAssets" [ label = "getAssets", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.getAssetValue" [ label = "getAssetValue", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.getAssetProportion" [ label = "getAssetProportion" ];
+  "Portfolio.getRemainingProportion" [ label = "getRemainingProportion" ];
+  "Portfolio.getNFTShare" [ label = "getNFTShare", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.getNFTValue" [ label = "getNFTValue", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.deposit" [ label = "deposit", color = "brown", fillcolor = "#ffbdb9" ];
+  "Portfolio.withdraw" [ label = "withdraw", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.rebalance" [ label = "rebalance", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Portfolio.getBaseCurrencyPrice" [ label = "getBaseCurrencyPrice" ];
+  "Portfolio.setRemainingProportion" [ label = "setRemainingProportion" ];
+  "Portfolio.rebalanceShares" [ label = "rebalanceShares" ];
+  "Portfolio.swapAsset" [ label = "swapAsset" ];
+  "Portfolio.swapTokens" [ label = "swapTokens" ];
+  "Portfolio.ISwapRouter" [ label = "ISwapRouter" ];
+  "Portfolio.address" [ label = "address" ];
+  "Portfolio.ownerOf" [ label = "ownerOf" ];
+  "Portfolio.IERC20" [ label = "IERC20" ];
+  "Portfolio.IERC20Metadata" [ label = "IERC20Metadata" ];
+  "Portfolio.shareOf" [ label = "shareOf" ];
+  "Portfolio.payable" [ label = "payable" ];
+  "Portfolio.totalSupply" [ label = "totalSupply" ];
+}
+
+subgraph "clusterPriceFeedConsumer" {
+  graph [ label = "PriceFeedConsumer", color = "black", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "black" ];
+  "PriceFeedConsumer.addPriceFeed" [ label = "addPriceFeed", color = "#FF9797", fillcolor = "#FF9797" ];
+  "PriceFeedConsumer.getLatestPrice" [ label = "getLatestPrice", color = "#FF9797", fillcolor = "#FF9797" ];
+  "PriceFeedConsumer.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "PriceFeedConsumer.removePriceFeed" [ label = "removePriceFeed", color = "#FF9797", fillcolor = "#FF9797" ];
+  "PriceFeedConsumer.getPriceFeed" [ label = "getPriceFeed", color = "#FF9797", fillcolor = "#FF9797" ];
+  "PriceFeedConsumer.priceFeedExists" [ label = "priceFeedExists", color = "#1bc6a6", shape =doubleoctagon ];
+  "PriceFeedConsumer.priceFeedDoesNotExists" [ label = "priceFeedDoesNotExists", color = "#1bc6a6", shape =doubleoctagon ];
+  "PriceFeedConsumer.AggregatorV3Interface" [ label = "AggregatorV3Interface" ];
+  "PriceFeedConsumer.address" [ label = "address" ];
+}
+
+subgraph "clusterSharedFund" {
+  graph [ label = "SharedFund", color = "black", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "black" ];
+  "SharedFund.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "SharedFund.invite" [ label = "invite", color = "#FF9797", fillcolor = "#FF9797" ];
+  "SharedFund._mint" [ label = "_mint" ];
+  "SharedFund.transferShares" [ label = "transferShares", color = "#FF9797", fillcolor = "#FF9797" ];
+  "SharedFund.transferFrom" [ label = "transferFrom" ];
+  "SharedFund.getOwners" [ label = "getOwners", color = "#FF9797", fillcolor = "#FF9797" ];
+  "SharedFund.shareOf" [ label = "shareOf" ];
+  "SharedFund.tokenIdOf" [ label = "tokenIdOf" ];
+  "SharedFund.totalSupply" [ label = "totalSupply", color = "#FF9797", fillcolor = "#FF9797" ];
+  "SharedFund.balanceOf" [ label = "balanceOf" ];
+  "SharedFund._safeMint" [ label = "_safeMint" ];
+  "SharedFund._isApprovedOrOwner" [ label = "_isApprovedOrOwner" ];
+  "SharedFund._msgSender" [ label = "_msgSender" ];
+  "SharedFund._transfer" [ label = "_transfer" ];
+}
+
+subgraph "clusterIWETH9" {
+  graph [ label = "IWETH9  (iface)", color = "black", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "black" ];
+  "IWETH9.withdraw" [ label = "withdraw", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IWETH9.deposit" [ label = "deposit", color = "brown", fillcolor = "#ffbdb9" ];
+  "IWETH9.totalSupply" [ label = "totalSupply", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IWETH9.transfer" [ label = "transfer", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IWETH9.balanceOf" [ label = "balanceOf", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IWETH9.allowance" [ label = "allowance", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IWETH9.approve" [ label = "approve", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IWETH9.decimals" [ label = "decimals", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IWETH9.transferFrom" [ label = "transferFrom", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clustertotalValue" {
+  graph [ label = "totalValue", color = "#e8726d", fontcolor = "#f0f0f0", style = "rounded,dashed", bgcolor = "black" ];
+  "totalValue.percentMul" [ label = "percentMul" ];
+}
+
+subgraph "clusterTransferHelper" {
+  graph [ label = "TransferHelper", color = "#e8726d", fontcolor = "#f0f0f0", style = "rounded,dashed", bgcolor = "black" ];
+  "TransferHelper.safeApprove" [ label = "safeApprove" ];
+}
+
+subgraph "clusterISwapRouter" {
+  graph [ label = "ISwapRouter", color = "#e8726d", fontcolor = "#f0f0f0", style = "rounded,dashed", bgcolor = "black" ];
+  "ISwapRouter.ExactInputSingleParams" [ label = "ExactInputSingleParams" ];
+  "ISwapRouter.exactInputSingle" [ label = "exactInputSingle" ];
+}
+
+subgraph "clusterCounters.Counter" {
+  graph [ label = "Counters.Counter", color = "#e8726d", fontcolor = "#f0f0f0", style = "rounded,dashed", bgcolor = "black" ];
+  "Counters.Counter.increment" [ label = "increment" ];
+  "Counters.Counter.current" [ label = "current" ];
+}
+
+  "Portfolio.<Constructor>";
+  "Portfolio.ISwapRouter";
+  "Portfolio.<Receive Ether>";
+  "Portfolio.address";
+  "Portfolio.onlyTokenOwner";
+  "Portfolio.ownerOf";
+  "Portfolio.addAsset";
+  "Portfolio.getRemainingProportion";
+  "Portfolio.setRemainingProportion";
+  "PriceFeedConsumer.addPriceFeed";
+  "Portfolio.changeAssetProportion";
+  "Portfolio.getPortfolioValue";
+  "Portfolio.IERC20";
+  "Portfolio.IERC20Metadata";
+  "PriceFeedConsumer.getLatestPrice";
+  "Portfolio.getAssets";
+  "Portfolio.getAssetValue";
+  "Portfolio.getAssetProportion";
+  "Portfolio.getNFTShare";
+  "Portfolio.shareOf";
+  "Portfolio.getNFTValue";
+  "Portfolio.deposit";
+  "Portfolio.rebalanceShares";
+  "Portfolio.withdraw";
+  "totalValue.percentMul";
+  "Portfolio.getBaseCurrencyPrice";
+  "IWETH9.withdraw";
+  "Portfolio.payable";
+  "Portfolio.rebalance";
+  "Portfolio.swapAsset";
+  "Portfolio.totalSupply";
+  "Portfolio.swapTokens";
+  "TransferHelper.safeApprove";
+  "ISwapRouter.ExactInputSingleParams";
+  "ISwapRouter.exactInputSingle";
+  "PriceFeedConsumer.<Constructor>";
+  "PriceFeedConsumer.AggregatorV3Interface";
+  "PriceFeedConsumer.priceFeedExists";
+  "PriceFeedConsumer.address";
+  "PriceFeedConsumer.priceFeedDoesNotExists";
+  "SharedFund.invite";
+  "SharedFund.balanceOf";
+  "SharedFund._mint";
+  "Counters.Counter.increment";
+  "Counters.Counter.current";
+  "SharedFund._safeMint";
+  "SharedFund.transferShares";
+  "SharedFund.tokenIdOf";
+  "SharedFund.transferFrom";
+  "SharedFund._isApprovedOrOwner";
+  "SharedFund._msgSender";
+  "SharedFund._transfer";
+  "SharedFund.getOwners";
+  "SharedFund.shareOf";
+  "SharedFund.totalSupply";
+  "Portfolio.<Constructor>" -> "Portfolio.ISwapRouter" [ color = "#1bc6a6" ];
+  "Portfolio.<Receive Ether>" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.onlyTokenOwner" -> "Portfolio.ownerOf" [ color = "#1bc6a6" ];
+  "Portfolio.addAsset" -> "Portfolio.getRemainingProportion" [ color = "#1bc6a6" ];
+  "Portfolio.addAsset" -> "Portfolio.getRemainingProportion" [ color = "#1bc6a6" ];
+  "Portfolio.addAsset" -> "Portfolio.setRemainingProportion" [ color = "#1bc6a6" ];
+  "Portfolio.addAsset" -> "PriceFeedConsumer.addPriceFeed" [ color = "blue" ];
+  "Portfolio.changeAssetProportion" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.changeAssetProportion" -> "Portfolio.getRemainingProportion" [ color = "#1bc6a6" ];
+  "Portfolio.changeAssetProportion" -> "Portfolio.setRemainingProportion" [ color = "#1bc6a6" ];
+  "Portfolio.changeAssetProportion" -> "Portfolio.setRemainingProportion" [ color = "#1bc6a6" ];
+  "Portfolio.getPortfolioValue" -> "Portfolio.IERC20" [ color = "#1bc6a6" ];
+  "Portfolio.getPortfolioValue" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.getPortfolioValue" -> "Portfolio.IERC20Metadata" [ color = "#1bc6a6" ];
+  "Portfolio.getPortfolioValue" -> "PriceFeedConsumer.getLatestPrice" [ color = "blue" ];
+  "Portfolio.getAssets" -> "Portfolio.IERC20" [ color = "#1bc6a6" ];
+  "Portfolio.getAssets" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.getAssets" -> "Portfolio.IERC20Metadata" [ color = "#1bc6a6" ];
+  "Portfolio.getAssets" -> "PriceFeedConsumer.getLatestPrice" [ color = "blue" ];
+  "Portfolio.getAssetValue" -> "Portfolio.IERC20" [ color = "#1bc6a6" ];
+  "Portfolio.getAssetValue" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.getAssetValue" -> "PriceFeedConsumer.getLatestPrice" [ color = "blue" ];
+  "Portfolio.getRemainingProportion" -> "Portfolio.getAssetProportion" [ color = "#1bc6a6" ];
+  "Portfolio.getRemainingProportion" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.getNFTShare" -> "Portfolio.shareOf" [ color = "#1bc6a6" ];
+  "Portfolio.getNFTShare" -> "Portfolio.ownerOf" [ color = "#1bc6a6" ];
+  "Portfolio.getNFTValue" -> "Portfolio.shareOf" [ color = "#1bc6a6" ];
+  "Portfolio.getNFTValue" -> "Portfolio.ownerOf" [ color = "#1bc6a6" ];
+  "Portfolio.getNFTValue" -> "Portfolio.getPortfolioValue" [ color = "#1bc6a6" ];
+  "Portfolio.deposit" -> "Portfolio.getPortfolioValue" [ color = "#1bc6a6" ];
+  "Portfolio.deposit" -> "Portfolio.getPortfolioValue" [ color = "#1bc6a6" ];
+  "Portfolio.deposit" -> "Portfolio.rebalanceShares" [ color = "#1bc6a6" ];
+  "Portfolio.withdraw" -> "Portfolio.getPortfolioValue" [ color = "#1bc6a6" ];
+  "Portfolio.withdraw" -> "totalValue.percentMul" [ color = "blue" ];
+  "Portfolio.withdraw" -> "totalValue.percentMul" [ color = "blue" ];
+  "Portfolio.withdraw" -> "Portfolio.rebalanceShares" [ color = "#1bc6a6" ];
+  "Portfolio.withdraw" -> "Portfolio.getBaseCurrencyPrice" [ color = "#1bc6a6" ];
+  "Portfolio.withdraw" -> "IWETH9.withdraw" [ color = "blue" ];
+  "Portfolio.withdraw" -> "Portfolio.payable" [ color = "#1bc6a6" ];
+  "Portfolio.rebalance" -> "Portfolio.getPortfolioValue" [ color = "#1bc6a6" ];
+  "Portfolio.rebalance" -> "Portfolio.getBaseCurrencyPrice" [ color = "#1bc6a6" ];
+  "Portfolio.rebalance" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.rebalance" -> "PriceFeedConsumer.getLatestPrice" [ color = "blue" ];
+  "Portfolio.rebalance" -> "Portfolio.IERC20" [ color = "#1bc6a6" ];
+  "Portfolio.rebalance" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.rebalance" -> "Portfolio.IERC20Metadata" [ color = "#1bc6a6" ];
+  "Portfolio.rebalance" -> "Portfolio.swapAsset" [ color = "#1bc6a6" ];
+  "Portfolio.rebalance" -> "Portfolio.swapAsset" [ color = "#1bc6a6" ];
+  "Portfolio.getBaseCurrencyPrice" -> "PriceFeedConsumer.getLatestPrice" [ color = "blue" ];
+  "Portfolio.getBaseCurrencyPrice" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.setRemainingProportion" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.rebalanceShares" -> "Portfolio.totalSupply" [ color = "#1bc6a6" ];
+  "Portfolio.swapAsset" -> "Portfolio.swapTokens" [ color = "#1bc6a6" ];
+  "Portfolio.swapAsset" -> "Portfolio.swapTokens" [ color = "#1bc6a6" ];
+  "Portfolio.swapTokens" -> "TransferHelper.safeApprove" [ color = "blue" ];
+  "Portfolio.swapTokens" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.swapTokens" -> "ISwapRouter.ExactInputSingleParams" [ color = "blue" ];
+  "Portfolio.swapTokens" -> "Portfolio.address" [ color = "#1bc6a6" ];
+  "Portfolio.swapTokens" -> "ISwapRouter.exactInputSingle" [ color = "blue" ];
+  "PriceFeedConsumer.<Constructor>" -> "PriceFeedConsumer.AggregatorV3Interface" [ color = "#1bc6a6" ];
+  "PriceFeedConsumer.addPriceFeed" -> "PriceFeedConsumer.AggregatorV3Interface" [ color = "#1bc6a6" ];
+  "PriceFeedConsumer.priceFeedExists" -> "PriceFeedConsumer.AggregatorV3Interface" [ color = "#1bc6a6" ];
+  "PriceFeedConsumer.priceFeedExists" -> "PriceFeedConsumer.address" [ color = "#1bc6a6" ];
+  "PriceFeedConsumer.priceFeedDoesNotExists" -> "PriceFeedConsumer.AggregatorV3Interface" [ color = "#1bc6a6" ];
+  "PriceFeedConsumer.priceFeedDoesNotExists" -> "PriceFeedConsumer.address" [ color = "#1bc6a6" ];
+  "SharedFund.invite" -> "SharedFund.balanceOf" [ color = "#1bc6a6" ];
+  "SharedFund.invite" -> "SharedFund._mint" [ color = "#1bc6a6" ];
+  "SharedFund._mint" -> "Counters.Counter.increment" [ color = "blue" ];
+  "SharedFund._mint" -> "Counters.Counter.current" [ color = "blue" ];
+  "SharedFund._mint" -> "SharedFund._safeMint" [ color = "#1bc6a6" ];
+  "SharedFund.transferShares" -> "SharedFund.tokenIdOf" [ color = "#1bc6a6" ];
+  "SharedFund.transferShares" -> "SharedFund.tokenIdOf" [ color = "#1bc6a6" ];
+  "SharedFund.transferShares" -> "SharedFund.transferFrom" [ color = "#1bc6a6" ];
+  "SharedFund.transferFrom" -> "SharedFund._isApprovedOrOwner" [ color = "#1bc6a6" ];
+  "SharedFund.transferFrom" -> "SharedFund._msgSender" [ color = "#1bc6a6" ];
+  "SharedFund.transferFrom" -> "SharedFund._transfer" [ color = "#1bc6a6" ];
+  "SharedFund.getOwners" -> "SharedFund.tokenIdOf" [ color = "#1bc6a6" ];
+  "SharedFund.getOwners" -> "SharedFund.shareOf" [ color = "#1bc6a6" ];
+  "SharedFund.totalSupply" -> "Counters.Counter.current" [ color = "blue" ];
+
+
+rankdir=LR
+node [shape=plaintext]
+subgraph cluster_01 { 
+    graph [ label = "Legend", color = "black", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "black" ];
+label = "Legend";
+key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+  <tr><td align="right" port="i1">Internal Call</td></tr>
+  <tr><td align="right" port="i2">External Call</td></tr>
+  <tr><td align="right" port="i3">Defined Contract</td></tr>
+  <tr><td align="right" port="i4">Undefined Contract</td></tr>
+  </table>>]
+key2 [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+  <tr><td port="i1">&nbsp;&nbsp;&nbsp;</td></tr>
+  <tr><td port="i2">&nbsp;&nbsp;&nbsp;</td></tr>
+  <tr><td port="i3" bgcolor="black">&nbsp;&nbsp;&nbsp;</td></tr>
+  <tr><td port="i4">
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="7" color="#e8726d">
+      <tr>
+       <td></td>
+      </tr>
+     </table>
+  </td></tr>
+  </table>>]
+key:i1:e -> key2:i1:w [color="#1bc6a6"]
+key:i2:e -> key2:i2:w [color="blue"]
+}
+}
