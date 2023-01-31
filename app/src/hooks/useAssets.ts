@@ -45,12 +45,6 @@ export const coins: { [key: string]: Coin } = {
     feed: "0x2c1d072e956AFFC0D435Cb7AC38EF18d24d9127c",
     label: "ChainLink",
   },
-  AAVE: {
-    symbol: "AAVE",
-    address: "0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012",
-    feed: "0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012",
-    label: "Aave",
-  },
   USDC: {
     symbol: "USDC",
     address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
